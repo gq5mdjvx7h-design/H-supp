@@ -638,10 +638,19 @@ exerciseStartInput.onchange = ()=>{
 
   initSelectors()
 buildPeriods()
+Object.keys(feries).forEach(date => {
 
-Object.keys(specialDays).forEach(date=>{
-  if(!data[date]) data[date] = { extra:0, recup:0, absent:0 }
-  data[date].absent = 7
+  // 🎌 Toujours marquer comme férié (visuel)
+  specialDays[date] = "ferie"
+
+  // 📅 Si le jour n’existe pas → férié chômé par défaut
+  if(!data[date]){
+    data[date] = { extra:0, recup:0, absent:7 }
+  }
+
+  // ✋ S’il existe déjà :
+  // ➜ on NE TOUCHE PAS à absent
+  // (donc un férié travaillé reste travaillé)
 })
 localStorage.setItem(STORAGE.data, JSON.stringify(data))
 
