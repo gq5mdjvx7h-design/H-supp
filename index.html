@@ -407,9 +407,6 @@ function calculate(){
   let h25 = 0
   let h50 = 0
 
-  let reportPrev = 0
-  let brut = 0
-  let net = 0
 const period=getCurrentPeriod()
 if(!period){ totaux.innerHTML=""; periodInfo.innerHTML=""; return }
 const reportPrev = reports[period.index-1] || 0
@@ -669,16 +666,6 @@ async function importFeries(){
       if(!specialDays[date]){
         specialDays[date] = "ferie"
       }
-function loadJSON(txt){
-  try{
-    data = JSON.parse(txt)
-    localStorage.setItem(STORAGE.data, JSON.stringify(data))
-    update()
-    alert("✅ Données importées")
-  }catch(e){
-    alert("❌ JSON invalide")
-  }
-}
       // créer le jour seulement s’il n’existe pas
 if(!data[date]){
   data[date] = { extra:0, recup:0, absent:7 }
@@ -717,13 +704,8 @@ exerciseStartInput.value = exerciseStart;
 exerciseStartInput.onchange = ()=>{
   exerciseStart = exerciseStartInput.value;
   localStorage.setItem(STORAGE.exerciseStart, exerciseStart);
-};
   buildPeriods();
 };
-
-initSelectors()
-buildPeriods()
-autoSwitchPeriodAtMidnight()
 
   // ===== FONCTION DE VÉRIFICATION DU MOIS EXACT =====
 function exportMonthlyPDF(){
@@ -783,6 +765,10 @@ function showToast(){
     toast.style.opacity = "0"
   }, 3000)
 }
+initSelectors()
+buildPeriods()
+autoSwitchPeriodAtMidnight()
+
 </script>
 <div id="toast" style="
   position:fixed;
