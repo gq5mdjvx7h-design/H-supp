@@ -1,4 +1,4 @@
-là<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
@@ -391,20 +391,31 @@ if(day.absent){
 }
 
 div.innerHTML = html
-if(key===new Date().toISOString().slice(0,10))div.classList.add("today")
+if(key === dateKeyLocal(new Date()))
+div.classList.add("today")
 div.onclick=()=>openPopup(key)
 calendar.appendChild(div)
 }
 }
 
 function calculate(){
+  let weeks = {}
+  let absences = {}
+  let totalRecup = 0
+  let details = []
+
+  let h25 = 0
+  let h50 = 0
+
+  let reportPrev = 0
+  let brut = 0
+  let net = 0
 const period=getCurrentPeriod()
 if(!period){ totaux.innerHTML=""; periodInfo.innerHTML=""; return }
 const reportPrev = reports[period.index-1] || 0
 lockInfo.textContent = locks[period.index] ? "🔒 Période verrouillée" : "🔓 Période déverrouillée"
 periodInfo.innerHTML=`<b>Période :</b> ${period.start.toLocaleDateString()} → ${period.end.getFullYear()===2099?"en cours":period.end.toLocaleDateString()}<br>
 <b>Report précédent :</b> ${reportPrev.toFixed(2)} h`
-let weeks={}, absences={}, totalRecup=0, details=[]
 Object.entries(data).forEach(([k,v])=>{
 const d=new Date(k)
 if(d>=period.start&&d<=period.end){
@@ -416,7 +427,7 @@ weeks[key]=(weeks[key]||0)+v.extra
 totalRecup+=v.recup||0
 }
 })
-let h25=0,h50=0
+
 Object.entries(weeks).forEach(([week,extra])=>{
 const absent = absences[week]||0
     const base = Math.max(0,35-absent)
@@ -658,6 +669,16 @@ async function importFeries(){
       if(!specialDays[date]){
         specialDays[date] = "ferie"
       }
+function loadJSON(txt){
+  try{
+    data = JSON.parse(txt)
+    localStorage.setItem(STORAGE.data, JSON.stringify(data))
+    update()
+    alert("✅ Données importées")
+  }catch(e){
+    alert("❌ JSON invalide")
+  }
+}
       // créer le jour seulement s’il n’existe pas
 if(!data[date]){
   data[date] = { extra:0, recup:0, absent:7 }
@@ -674,7 +695,10 @@ if(!data[date]){
     alert("❌ Impossible d’importer les jours fériés")
   }
 }
-function update(){generateCalendar();calculate();autoBackup()}
+function update(){
+  generateCalendar();
+  calculate();
+}
 
 monthSelect.onchange=()=>{viewMonth=+monthSelect.value;generateCalendar()}
 yearSelect.onchange=()=>{viewYear=+yearSelect.value;generateCalendar()}
@@ -693,6 +717,7 @@ exerciseStartInput.value = exerciseStart;
 exerciseStartInput.onchange = ()=>{
   exerciseStart = exerciseStartInput.value;
   localStorage.setItem(STORAGE.exerciseStart, exerciseStart);
+};
   buildPeriods();
 };
 
