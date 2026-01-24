@@ -63,34 +63,37 @@ button,input,select,textarea{width:100%;padding:8px;margin:5px 0}
 
 <details class="section" open>
   <summary>🔧 Configuration</summary>
+
   <div class="config">
+
+    <label><b>Date de début d’exercice</b></label>
+    <input type="date" id="exerciseStartInput">
+
+    <h2>Période comptable</h2>
+    <button onclick="openClosures()">📅 Définir / modifier les clôtures</button>
+    <select id="periodSelect"></select>
+    <p id="periodInfo"></p>
+
+    <button onclick="toggleLock()">🔒 Verrouiller / 🔓 Déverrouiller la période</button>
+    <p id="lockInfo"></p>
+
+    <div id="rateContainer"></div>
+
+    <hr>
+    <button onclick="exportJSON()">⬇️ Exporter (.json)</button>
+    <button onclick="importJSON()">⬆️ Importer (.json)</button>
+    <button onclick="exportMonthlyPDF()">📄 Export PDF du mois</button>
+
+    <hr>
+    <label>Date de clôture annuelle</label>
+    <input type="date" id="annualDateInput">
+
+    <hr>
+    <h2>Jours fériés</h2>
+    <button onclick="importFeries()">🇫🇷 Importer les jours fériés officiels</button>
+
   </div>
 </details>
-<hr>
-<label><b>Date de début d’exercice</b></label>
-<input type="date" id="exerciseStartInput">
-<h2>Période comptable</h2>
-<button onclick="openClosures()">📅 Définir / modifier les clôtures</button>
-<select id="periodSelect"></select>
-<p id="periodInfo"></p>
-<button onclick="toggleLock()">🔒 Verrouiller / 🔓 Déverrouiller la période</button>
-<p id="lockInfo"></p>
-
-<div id="rateContainer"></div>
-
-<hr>
-<button onclick="exportJSON()">⬇️ Exporter (.json)</button>
-<button onclick="importJSON()">⬆️ Importer (.json)</button>
-<button onclick="exportMonthlyPDF()">📄 Export PDF du mois</button>
-
-<hr>
-<label>Date de clôture annuelle</label>
-<input type="date" id="annualDateInput">
-
-<hr>
-<h2>Jours fériés</h2>
-<button onclick="importFeries()">🇫🇷 Importer les jours fériés officiels</button>
-</div>
 
 <div class="calendar-wrapper main-zone">
 <div class="month-nav">
