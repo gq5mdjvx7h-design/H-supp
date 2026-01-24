@@ -44,6 +44,7 @@ button,input,select,textarea{width:100%;padding:8px;margin:5px 0}
 <hr>
 <button onclick="exportJSON()">⬇️ Exporter (.json)</button>
 <button onclick="importJSON()">⬆️ Importer (.json)</button>
+<button onclick="exportMonthlyPDF()">📄 Export PDF du mois</button>
 
 <hr>
 <label>Date de clôture annuelle</label>
@@ -119,6 +120,7 @@ button,input,select,textarea{width:100%;padding:8px;margin:5px 0}
 </div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
 
 // ===== MULTI-ANNÉE =====
@@ -571,7 +573,51 @@ localStorage.setItem(STORAGE.data, JSON.stringify(data))
 
 
 // ===== FONCTION DE VÉRIFICATION DU MOIS EXACT =====
-function shouldShowAnnualClosure(period){
+function exportMonthlyPDF(){
+  const { jsPDF } = window.jspdf
+  const pdf = new jsPDF()
+
+  const monthName = months[viewMonth]
+  const title = `Heures supplémentaires – ${monthName} ${viewYear}`
+
+  let y = 15
+  pdf.setFontSize(14)
+  pdf.text(title, 10, y)
+
+  y += 10
+  pdf.setFontSize(10)
+
+  let totalExtra = 0
+  let totalRecup = 0
+  let totalAbs = 0
+
+  Object.entries(data).forEach(([date, v])=>{
+    const d = new Date(date)
+    if(d.getMonth() === viewMonth && d.getFullYear() === viewYear){
+      totalExtra += v.extra || 0
+      totalRecup += v.recup || 0
+      totalAbs += v.absent || 0
+
+      pdf.text(
+        `${date}  |  +${v.extra||0}h  |  -${v.recup||0}h  |  Abs ${v.absent||0}h`,
+        10,
+        y
+      )
+      y += 6
+      if(y > 280){ pdf.addPage(); y = 15 }
+    }
+  })
+
+  y += 5
+  pdf.text(`Total heures sup : ${totalExtra.toFixed(2)} h`, 10, y)
+  y += 6
+  pdf.text(`Total récupération : ${totalRecup.toFixed(2)} h`, 10, y)
+  y += 6
+  pdf.text(`Total absences : ${totalAbs.toFixed(2)} h`, 10, y)
+
+  pdf.save(`heures_sup_${monthName}_${viewYear}.pdf`)
+}
+  function shouldShowAnnualClosure(period){
   if(!annualDate) return false;
   const ad = new Date(annualDate);
   if(ad < period.start || ad > period.end) return false;
