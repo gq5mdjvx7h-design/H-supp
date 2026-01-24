@@ -177,6 +177,31 @@ button,input,select,textarea{width:100%;padding:8px;margin:5px 0}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
 
+function autoSwitchPeriodAtMidnight(){
+  const now = new Date()
+
+  // ms jusqu’à minuit
+  const nextMidnight = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate() + 1,
+    0, 0, 0, 0
+  )
+
+  const delay = nextMidnight - now
+
+  setTimeout(() => {
+    // 🔁 on reconstruit les périodes
+    buildPeriods()
+
+    // 🔄 on force la mise à jour
+    update()
+
+    // 🔁 on relance pour la nuit suivante
+    autoSwitchPeriodAtMidnight()
+  }, delay)
+}
+
 // ===== MULTI-ANNÉE =====
 let currentSuffix = localStorage.getItem("ACTIVE_YEAR_SUFFIX") || new Date().getFullYear();
 document.getElementById("activeYearLabel").textContent = currentSuffix;
