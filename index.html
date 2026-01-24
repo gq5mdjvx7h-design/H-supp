@@ -764,6 +764,15 @@ function exportMonthlyPDF(){
     ad.getMonth() === viewMonth
   );
 }
+function showToast(){
+  const toast = document.getElementById("toast")
+  if(!toast) return
+
+  toast.style.opacity = "1"
+  setTimeout(() => {
+    toast.style.opacity = "0"
+  }, 3000)
+}
 </script>
 <div id="toast" style="
   position:fixed;
