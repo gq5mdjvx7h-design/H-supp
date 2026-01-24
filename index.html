@@ -65,6 +65,23 @@ button,input,select,textarea{width:100%;padding:8px;margin:5px 0}
 .day.today{outline:3px solid #ff9800;box-shadow:0 0 6px rgba(255,152,0,.8)}
 </style>
 </head>
+<div id="toast" style="
+  position:fixed;
+  bottom:20px;
+  left:50%;
+  transform:translateX(-50%);
+  background:#323232;
+  color:#fff;
+  padding:10px 16px;
+  border-radius:20px;
+  font-size:14px;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .4s;
+  z-index:9999;
+">
+  🕛 Nouvelle période activée automatiquement
+</div>
 <body>
 
 <h1>Compteur Heures Sup</h1>
