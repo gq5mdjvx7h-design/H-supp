@@ -712,27 +712,19 @@ exerciseStartInput.onchange = ()=>{
 initSelectors()
 
 buildPeriods()
-function autoSwitchPeriodAtMidnight(){
-  const now = new Date()
-
-  const nextMidnight = new Date(
-    now.getFullYear(),
-    now.getMonth(),
-    now.getDate() + 1,
-    0, 0, 0, 0
-  )
-
-  const delay = nextMidnight - now
-
-  setTimeout(() => {
-    buildPeriods()
-    update()
-
-    // 🔔 message discret
-    showToast()
 
     // 🔁 replanifie pour la nuit suivante
     autoSwitchPeriodAtMidnight()
+    function showToast(){
+  const toast = document.getElementById("toast")
+  if(!toast) return
+
+  toast.style.opacity = "1"
+
+  setTimeout(() => {
+    toast.style.opacity = "0"
+  }, 3000)
+}
   }, delay)
 }
 
