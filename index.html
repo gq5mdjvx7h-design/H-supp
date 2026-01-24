@@ -46,13 +46,13 @@ button,input,select,textarea{width:100%;padding:8px;margin:5px 0}
 <button onclick="importJSON()">⬆️ Importer (.json)</button>
 
 <hr>
-<h2>Clôture annuelle</h2>
 <label>Date de clôture annuelle</label>
 <input type="date" id="annualDateInput">
-</div>
-  <hr>
+
+<hr>
 <h2>Jours fériés</h2>
 <button onclick="importFeries()">🇫🇷 Importer les jours fériés officiels</button>
+</div>
 
 <div class="calendar-wrapper">
 <div class="month-nav">
@@ -350,6 +350,19 @@ Récup : ${totalRecup.toFixed(2)} h<br>
 const rateContainer = document.getElementById("rateContainer");
 rateContainer.innerHTML = "";
 
+// --- CALCUL ABSENCES ANNÉE ---
+let annualAbsHours = 0
+let annualAbsDays = 0
+
+Object.entries(data).forEach(([date, v])=>{
+  const d = new Date(date)
+  if(d.getFullYear() == currentSuffix){
+    const abs = v.absent || 0
+    annualAbsHours += abs
+    if(abs >= 7) annualAbsDays++
+  }
+})
+  
 if(shouldShowAnnualClosure(period)){
   rateContainer.innerHTML = `
     <div style="background:#fff3e0;padding:10px;border-radius:6px;border:1px solid #ff9800;margin-top:10px;">
@@ -362,13 +375,20 @@ if(shouldShowAnnualClosure(period)){
   const rate = annualRate || 10;
   const paiement = net * rate;
 
-  totaux.innerHTML += `
+totaux.innerHTML += `
+  <hr>
+  <div style="background:#e8f5e9;padding:15px;border:2px solid #2e7d32;border-radius:8px;">
+    <h3 style="margin:0;color:#2e7d32;">🎯 Clôture Annuelle</h3>
+
+    <b>Solde à liquider :</b> ${net.toFixed(2)} h<br>
+    <b>Paiement (${rate}€/h) :</b> ${paiement.toFixed(2)} €<br>
+
     <hr>
-    <div style="background:#e8f5e9;padding:15px;border:2px solid #2e7d32;border-radius:8px;">
-      <h3 style="margin:0;color:#2e7d32;">🎯 Clôture Annuelle</h3>
-      Solde à liquider : ${net.toFixed(2)} h<br>
-      Paiement (${rate}€/h) : <b>${paiement.toFixed(2)} €</b>
-    </div>`;
+
+    <b>📌 Récapitulatif des absences (${currentSuffix})</b><br>
+    Heures d’absence : ${annualAbsHours.toFixed(2)} h<br>
+    Jours d’absence : ${annualAbsDays} jour(s)
+  </div>`;
 }
 
 }
@@ -542,6 +562,7 @@ Object.keys(specialDays).forEach(date=>{
   if(!data[date]) data[date] = { extra:0, recup:0, absent:0 }
   data[date].absent = 7
 })
+localStorage.setItem(STORAGE.data, JSON.stringify(data))
 
 
 // ===== FONCTION DE VÉRIFICATION DU MOIS EXACT =====
