@@ -411,9 +411,19 @@ Object.keys(feries).forEach(date => {
   specialDays[date] = "ferie"
 
   // 📅 Si la journée n’existe pas encore → férié chômé par défaut
+   Object.keys(feries).forEach(date => {
+
+  // 🎌 Marque toujours comme férié (couleur / label)
+  specialDays[date] = "ferie"
+
+  // 📅 Si le jour n’existe pas → férié chômé par défaut
   if(!data[date]){
     data[date] = { extra:0, recup:0, absent:7 }
-    return
+  }
+
+  // ✋ S’il existe déjà :
+  // ➜ on NE TOUCHE PAS à absent (respect travail manuel)
+})   return
   }
 
   // ✋ Si elle existe déjà :
@@ -654,24 +664,25 @@ function exportMonthlyPDF(){
   let totalExtra = 0
   let totalRecup = 0
   let totalAbs = 0
+Object.entries(data).forEach(([date, v])=>{
+  const d = new Date(date)
 
-  Object.entries(data).forEach(([date, v])=>{
-    const d = new Date(date)
-    if(d.getMonth() === viewMonth && d.getFullYear() === viewYear){
-      totalExtra += v.extra || 0
-      totalRecup += v.recup || 0
-      totalAbs += v.absent || 0
+  if(d >= period.start && d <= annualLimit){
+    const abs = v.absent || 0
 
-      pdf.text(
-        `${date}  |  +${v.extra||0}h  |  -${v.recup||0}h  |  Abs ${v.absent||0}h`,
-        10,
-        y
-      )
-      y += 6
-      if(y > 280){ pdf.addPage(); y = 15 }
+    if(abs > 0){
+      if(specialDays[date] === "ferie"){
+        // 🎌 FÉRIÉ CHÔMÉ
+        annualFerieDays++
+        annualFerieHours += abs || 7
+      }else{
+        // ❌ ABSENCE CLASSIQUE
+        annualAbsHours += abs
+        if(abs >= 7) annualAbsDays++
+      }
     }
-  })
-
+  }
+})
   y += 5
   pdf.text(`Total heures sup : ${totalExtra.toFixed(2)} h`, 10, y)
   y += 6
