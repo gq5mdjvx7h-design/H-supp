@@ -531,7 +531,6 @@ function openPopup(date){
 selectedDate=date
 const d=data[date]||{extra:0,recup:0,absent:0}
 popupDate.textContent=date
-popupCurrent.textContent=`HS ${d.extra} h | Récup ${d.recup} h`
 manualExtra.value=d.extra
 manualRecup.value=d.recup
   absentHours.value=d.absent||0
