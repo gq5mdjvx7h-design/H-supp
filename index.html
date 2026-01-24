@@ -50,6 +50,9 @@ button,input,select,textarea{width:100%;padding:8px;margin:5px 0}
 <label>Date de clôture annuelle</label>
 <input type="date" id="annualDateInput">
 </div>
+  <hr>
+<h2>Jours fériés</h2>
+<button onclick="importFeries()">🇫🇷 Importer les jours fériés officiels</button>
 
 <div class="calendar-wrapper">
 <div class="month-nav">
@@ -136,7 +139,8 @@ const STORAGE = {
   closures: "CLOSURES_REPORT_" + currentSuffix,
   reports: "REPORTS_REPORT_" + currentSuffix,
   locks: "LOCKS_REPORT_" + currentSuffix,
-  annualDate: "ANNUAL_DATE_" + currentSuffix
+  annualDate: "ANNUAL_DATE_" + currentSuffix,
+  specialDays: "SPECIAL_DAYS_" + currentSuffix
 };
 
 // ===== DONNÉES =====
@@ -146,6 +150,7 @@ let reports = JSON.parse(localStorage.getItem(STORAGE.reports)) || {};
 let locks = JSON.parse(localStorage.getItem(STORAGE.locks)) || {};
 let annualDate = localStorage.getItem(STORAGE.annualDate) || "";
 let annualRate = 10;
+let specialDays = JSON.parse(localStorage.getItem(STORAGE.specialDays)) || {};
 
 // OPTION : autoriser la récup même sans heures sup le même jour
 const ALLOW_RECUP_FREE = true;
@@ -486,7 +491,36 @@ a.download=`backup_heures_sup_${now}.json`
 a.click()
 localStorage.setItem(key,now)
 }
+async function importFeries(){
+  const year = currentSuffix
 
+  if(!confirm("Importer les jours fériés officiels pour " + year + " ?")) return
+
+  try{
+    const res = await fetch(
+      `https://calendrier.api.gouv.fr/jours-feries/metropole/${year}.json`
+    )
+    const feries = await res.json()
+
+    Object.keys(feries).forEach(date=>{
+      // ne pas écraser une valeur existante
+      if(!specialDays[date]){
+        specialDays[date] = "ferie"
+      }
+
+      if(!data[date]) data[date] = { extra:0, recup:0, absent:0 }
+      data[date].absent = 7
+    })
+
+    localStorage.setItem(STORAGE.specialDays, JSON.stringify(specialDays))
+    localStorage.setItem(STORAGE.data, JSON.stringify(data))
+
+    update()
+    alert("✅ Jours fériés importés")
+  }catch(e){
+    alert("❌ Impossible d’importer les jours fériés")
+  }
+}
 function update(){generateCalendar();calculate();autoBackup()}
 
 monthSelect.onchange=()=>{viewMonth=+monthSelect.value;generateCalendar()}
@@ -501,7 +535,13 @@ annualDateInput.onchange = ()=>{
   localStorage.setItem(STORAGE.annualDate, annualDate);
 };
 
-initSelectors(); buildPeriods()
+  initSelectors()
+buildPeriods()
+
+Object.keys(specialDays).forEach(date=>{
+  if(!data[date]) data[date] = { extra:0, recup:0, absent:0 }
+  data[date].absent = 7
+})
 
 
 // ===== FONCTION DE VÉRIFICATION DU MOIS EXACT =====
