@@ -84,14 +84,6 @@ button,input,select,textarea{width:100%;padding:8px;margin:5px 0}
     <label><b>Date de début d’exercice</b></label>
     <input type="date" id="exerciseStartInput">
 
-    <h2>Période comptable</h2>
-    <button onclick="openClosures()">📅 Définir / modifier les clôtures</button>
-    <select id="periodSelect"></select>
-    <p id="periodInfo"></p>
-
-    <button onclick="toggleLock()">🔒 Verrouiller / 🔓 Déverrouiller la période</button>
-    <p id="lockInfo"></p>
-
     <div id="rateContainer"></div>
 
     <hr>
@@ -207,9 +199,6 @@ function switchYear(){
 // ===== STOCKAGE DYNAMIQUE =====
 const STORAGE = {
   data: "DATA_REPORT_" + currentSuffix,
-  closures: "CLOSURES_REPORT_" + currentSuffix,
-  reports: "REPORTS_REPORT_" + currentSuffix,
-  locks: "LOCKS_REPORT_" + currentSuffix,
   annualDate: "ANNUAL_DATE_" + currentSuffix,
   specialDays: "SPECIAL_DAYS_" + currentSuffix,
   exerciseStart: "EXERCISE_START_" + currentSuffix
@@ -217,9 +206,6 @@ const STORAGE = {
 
 // ===== DONNÉES =====
 let data = JSON.parse(localStorage.getItem(STORAGE.data)) || {};
-let closures = JSON.parse(localStorage.getItem(STORAGE.closures)) || [];
-let reports = JSON.parse(localStorage.getItem(STORAGE.reports)) || {};
-let locks = JSON.parse(localStorage.getItem(STORAGE.locks)) || {};
 let annualDate = localStorage.getItem(STORAGE.annualDate) || "";
 let annualRate = 10;
 let specialDays = JSON.parse(localStorage.getItem(STORAGE.specialDays)) || {};
