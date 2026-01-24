@@ -11,7 +11,7 @@ h1,h2{text-align:center}
 .calendar-wrapper{max-width:900px;margin:20px auto}
 .weekdays,.calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
 .weekday{text-align:center;font-weight:bold;background:#ddd;padding:8px 0;border-radius:6px}
-..day{
+.day{
   background:#fff;
   padding:6px;
   border-radius:6px;
@@ -312,12 +312,29 @@ if(period){
 const dk=new Date(key)
 if(dk>=period.start && dk<=period.end){div.classList.add("in-period")}
 }
-const day=data[key]||{extra:0,recup:0}
-div.innerHTML = `
-  <strong>${d}</strong>
-  <small>+${day.extra}h</small>
-  <small>- ${day.recup}h</small>
-`
+let html = `<strong>${d}</strong>`
+
+if(day.extra){
+  html += `<small style="color:#1976d2">+${day.extra}h</small>`
+}
+
+if(day.recup){
+  html += `<small style="color:#ef6c00">-${day.recup}h</small>`
+}
+
+if(day.absent){
+  if(specialDays[key] === "ferie"){
+    html += `<small style="color:#0d47a1;font-weight:bold">🎌 Férié</small>`
+    div.style.background = "#e3f2fd"
+    div.style.border = "2px dashed #1976d2"
+  }else{
+    html += `<small style="color:#c62828;font-weight:bold">ABS ${day.absent}h</small>`
+    div.style.background = "#ffebee"
+    div.style.border = "2px solid #c62828"
+  }
+}
+
+div.innerHTML = html
 if(key===new Date().toISOString().slice(0,10))div.classList.add("today")
 div.onclick=()=>openPopup(key)
 calendar.appendChild(div)
@@ -382,18 +399,30 @@ rateContainer.innerHTML = "";
 // --- CALCUL ABSENCES ANNÉE ---
 let annualAbsHours = 0
 let annualAbsDays = 0
+let annualFerieDays = 0
+let annualFerieHours = 0
 const annualLimit = new Date(annualDate)
 
+  
 Object.entries(data).forEach(([date, v])=>{
   const d = new Date(date)
 
   if(
-    d.getFullYear() == currentSuffix &&
+    d >= period.start &&
     d <= annualLimit
   ){
     const abs = v.absent || 0
-    annualAbsHours += abs
-    if(abs >= 7) annualAbsDays++
+
+    if(abs > 0){
+      annualAbsHours += abs
+      if(abs >= 7) annualAbsDays++
+    }
+
+    // 🎌 COMPTEUR FÉRIÉS
+    if(specialDays[date] === "ferie"){
+      annualFerieDays++
+      annualFerieHours += abs || 7
+    }
   }
 })
   
@@ -419,9 +448,15 @@ totaux.innerHTML += `
 
     <hr>
 
-    <b>📌 Récapitulatif des absences (${currentSuffix})</b><br>
-    Heures d’absence : ${annualAbsHours.toFixed(2)} h<br>
-    Jours d’absence : ${annualAbsDays} jour(s)
+<b>📌 Récapitulatif annuel (${currentSuffix})</b><br>
+
+❌ Absences :<br>
+• ${annualAbsDays} jour(s)<br>
+• ${annualAbsHours.toFixed(2)} h<br><br>
+
+🎌 Jours fériés :<br>
+• ${annualFerieDays} jour(s)<br>
+• ${annualFerieHours.toFixed(2)} h
   </div>`;
 }
 
