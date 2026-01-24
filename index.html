@@ -288,17 +288,6 @@ calendar.appendChild(div)
 
 function calculate(){
 let weeks={}, absences={}, totalRecup=0, details=[]
-Object.entries(data).forEach(([k,v])=>{
-const d=new Date(k)
-if(d>=period.start&&d<=period.end){
-const m=new Date(d); const day=m.getDay()||7
-if(day!==1)m.setDate(m.getDate()-(day-1))
-const key = dateKeyLocal(m)
-weeks[key]=(weeks[key]||0)+v.extra
-    absences[key]=(absences[key]||0)+(v.absent||0)
-totalRecup+=v.recup||0
-}
-})
 let h25=0,h50=0
 Object.entries(weeks).forEach(([week,extra])=>{
 const absent = absences[week]||0
@@ -317,12 +306,6 @@ details.push(`Semaine du ${new Date(week).toLocaleDateString()} : Base ${base}h 
 })
 const brut25 = h25*1.25
 const brut50 = h50*1.5
-const brut = brut25+brut50+reportPrev
-const net = brut-totalRecup
-if(!locks[period.index]){
-reports[period.index]=net
-localStorage.setItem(STORAGE.reports,JSON.stringify(reports))
-}
 totaux.innerHTML = `
 <details class="calc-details">
   <summary>📊 Détails des calculs</summary>
@@ -351,37 +334,8 @@ let annualAbsHours = 0
 let annualAbsDays = 0
 let annualFerieDays = 0
 let annualFerieHours = 0
-const annualLimit = new Date(annualDate)
-Object.entries(data).forEach(([date, v]) => {
-  const d = new Date(date)
 
-  // seulement jusqu’à la clôture annuelle
-  if(d >= period.start && d <= annualLimit){
-
-    const abs = v.absent || 0
-    if(abs > 0){
-      if(specialDays[date] === "ferie"){
-        // 🎌 férié chômé
-        annualFerieDays++
-        annualFerieHours += abs
-      }else{
-        // ❌ absence classique
-        annualAbsHours += abs
-        if(abs >= 7) annualAbsDays++
-      }
-    }
-  }
-})
-if(shouldShowAnnualClosure(period)){
-  rateContainer.innerHTML = `
-    <div style="background:#fff3e0;padding:10px;border-radius:6px;border:1px solid #ff9800;margin-top:10px;">
-      <label><b>Taux horaire pour cette clôture (€)</b></label>
-      <input type="number" id="hourlyRateInput" step="0.5"
-      value="${annualRate}"
-      oninput="annualRate = Number(this.value) || 10; calculate()">
-    </div>`;
-
-  const rate = annualRate || 10;
+const rate = annualRate || 10;
   const paiement = net * rate;
 
 totaux.innerHTML += `
@@ -452,26 +406,6 @@ function save(){ localStorage.setItem(STORAGE.data,JSON.stringify(data)) }
 function isIOS(){return /iPad|iPhone|iPod/.test(navigator.userAgent)}
 
 
-  // 🌍 iOS + Android récents → feuille de partage
-  if (navigator.canShare && navigator.canShare({ files: [new File([blob], filename)] })) {
-    const file = new File([blob], filename, { type: "application/json" })
-    navigator.share({
-      files: [file],
-      title: "Sauvegarde heures supplémentaires"
-    })
-    return
-  }
-
-  // 💻 PC / Mac / anciens navigateurs → téléchargement
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement("a")
-  a.href = url
-  a.download = filename
-  document.body.appendChild(a)
-  a.click()
-  document.body.removeChild(a)
-  URL.revokeObjectURL(url)
-}
 
 function importJSON(){
 if(isIOS()){
@@ -493,25 +427,9 @@ input.click()
 
 function confirmImportJSON(){loadJSON(jsonArea.value);closeJSONPopup()}
 
-function loadJSON(text){
-let obj
-try{obj = JSON.parse(text)}catch(e){alert("❌ JSON invalide");return}
 
 function closeJSONPopup(){popupJSON.style.display = "none"}
 
-function autoBackup(){
-const key="AUTO_BACKUP_HS"
-const last=localStorage.getItem(key)
-const now=new Date().toISOString().slice(0,7)
-if(last===now)return
-const payload={data,closures,reports}
-const blob=new Blob([JSON.stringify(payload)],{type:"application/json"})
-const a=document.createElement("a")
-a.href=URL.createObjectURL(blob)
-a.download=`backup_heures_sup_${now}.json`
-a.click()
-localStorage.setItem(key,now)
-}
 async function importFeries(){
   const year = currentSuffix
 
@@ -602,17 +520,8 @@ function exportMonthlyPDF(){
   y += 6
   pdf.text(`Total absences : ${totalAbs.toFixed(2)} h`, 10, y)
 
-  pdf.save(`heures_sup_${monthName}_${viewYear}.pdf`)
-}
-  function shouldShowAnnualClosure(period){
-  if(!annualDate) return false;
-  const ad = new Date(annualDate);
-  if(ad < period.start || ad > period.end) return false;
-  return (
-    ad.getFullYear() === viewYear &&
-    ad.getMonth() === viewMonth
-  );
-}
+  pdf.save(`heures_sup_${monthName}_${viewYear}.
+  
 function showToast(){
   const toast = document.getElementById("toast")
   if(!toast) return
