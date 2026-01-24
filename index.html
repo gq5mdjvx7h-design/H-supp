@@ -194,18 +194,8 @@ function autoSwitchPeriodAtMidnight(){
   setTimeout(() => {
     buildPeriods()
     update()
-    showToast() // ✅ toast discret
+    showToast()           // 🕛 message discret
     autoSwitchPeriodAtMidnight() // 🔁 nuit suivante
-  }, delay)
-}
-    // 🔁 on reconstruit les périodes
-    buildPeriods()
-
-    // 🔄 on force la mise à jour
-    update()
-
-    // 🔁 on relance pour la nuit suivante
-    autoSwitchPeriodAtMidnight()
   }, delay)
 }
 
