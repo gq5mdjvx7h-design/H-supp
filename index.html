@@ -119,13 +119,34 @@ button,input,select,textarea{width:100%;padding:8px;margin:5px 0}
 <script>
 
 // ===== MULTI-ANNÉE =====
-  const STORAGE = {
+let currentSuffix = localStorage.getItem("ACTIVE_YEAR_SUFFIX") || new Date().getFullYear();
+document.getElementById("activeYearLabel").textContent = currentSuffix;
+
+function switchYear(){
+  const res = prompt("Année / exercice :", currentSuffix);
+  if(res && res !== currentSuffix){
+    localStorage.setItem("ACTIVE_YEAR_SUFFIX", res);
+    location.reload();
+  }
+}
+
+// ===== STOCKAGE DYNAMIQUE =====
+const STORAGE = {
   data: "DATA_REPORT_" + currentSuffix,
   closures: "CLOSURES_REPORT_" + currentSuffix,
   reports: "REPORTS_REPORT_" + currentSuffix,
   locks: "LOCKS_REPORT_" + currentSuffix,
   annualDate: "ANNUAL_DATE_" + currentSuffix
 };
+
+// ===== DONNÉES =====
+let data = JSON.parse(localStorage.getItem(STORAGE.data)) || {};
+let closures = JSON.parse(localStorage.getItem(STORAGE.closures)) || [];
+let reports = JSON.parse(localStorage.getItem(STORAGE.reports)) || {};
+let locks = JSON.parse(localStorage.getItem(STORAGE.locks)) || {};
+let annualDate = localStorage.getItem(STORAGE.annualDate) || "";
+let annualRate = 10;
+
 // OPTION : autoriser la récup même sans heures sup le même jour
 const ALLOW_RECUP_FREE = true;
 const months=["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"]
