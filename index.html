@@ -276,7 +276,6 @@ function getCurrentPeriod(){
 
 function generateCalendar(){
 calendar.innerHTML=""
-const firstDay=new Date(viewYear,viewMonth,1).getDay()
 const firstDay = new Date(viewYear, viewMonth, 1).getDay()
 const offset = firstDay === 0 ? 6 : firstDay - 1
 const days=new Date(viewYear,viewMonth+1,0).getDate()
