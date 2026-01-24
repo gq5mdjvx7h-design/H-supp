@@ -414,19 +414,30 @@ function save(){ localStorage.setItem(STORAGE.data,JSON.stringify(data)) }
 function isIOS(){return /iPad|iPhone|iPod/.test(navigator.userAgent)}
 
 function exportJSON(){
-const payload = { data, closures, reports }
-const json = JSON.stringify(payload)
-if(isIOS()){
-jsonTitle.textContent = "Copiez ce texte (Export)"
-jsonArea.value = json
-popupJSON.style.display = "flex"
-}else{
-const blob = new Blob([json], {type:"application/json"})
-const a = document.createElement("a")
-a.href = URL.createObjectURL(blob)
-a.download = "heures_sup_backup.json"
-a.click()
-}
+  const payload = { data, closures, reports }
+  const json = JSON.stringify(payload, null, 2)
+  const blob = new Blob([json], { type: "application/json" })
+  const filename = `heures_sup_${currentSuffix}.json`
+
+  // 🌍 iOS + Android récents → feuille de partage
+  if (navigator.canShare && navigator.canShare({ files: [new File([blob], filename)] })) {
+    const file = new File([blob], filename, { type: "application/json" })
+    navigator.share({
+      files: [file],
+      title: "Sauvegarde heures supplémentaires"
+    })
+    return
+  }
+
+  // 💻 PC / Mac / anciens navigateurs → téléchargement
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement("a")
+  a.href = url
+  a.download = filename
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  URL.revokeObjectURL(url)
 }
 
 function importJSON(){
