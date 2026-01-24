@@ -32,6 +32,9 @@ button,input,select,textarea{width:100%;padding:8px;margin:5px 0}
 
 
 <div class="config">
+<hr>
+<label><b>Date de début d’exercice</b></label>
+<input type="date" id="exerciseStartInput">
 <h2>Période comptable</h2>
 <button onclick="openClosures()">📅 Définir / modifier les clôtures</button>
 <select id="periodSelect"></select>
@@ -143,6 +146,7 @@ const STORAGE = {
   locks: "LOCKS_REPORT_" + currentSuffix,
   annualDate: "ANNUAL_DATE_" + currentSuffix,
   specialDays: "SPECIAL_DAYS_" + currentSuffix
+  exerciseStart: "EXERCISE_START_" + currentSuffix,
 };
 
 // ===== DONNÉES =====
@@ -153,6 +157,7 @@ let locks = JSON.parse(localStorage.getItem(STORAGE.locks)) || {};
 let annualDate = localStorage.getItem(STORAGE.annualDate) || "";
 let annualRate = 10;
 let specialDays = JSON.parse(localStorage.getItem(STORAGE.specialDays)) || {};
+let exerciseStart = localStorage.getItem(STORAGE.exerciseStart) || "";
 
 // OPTION : autoriser la récup même sans heures sup le même jour
 const ALLOW_RECUP_FREE = true;
@@ -183,10 +188,11 @@ let selectedDate=""
 let currentPeriodIndex=0
 
 function getBaseStartDate(){
-  if(closures.length){
-    return new Date(new Date(closures[0]).getFullYear() + "-01-01")
+  if(!exerciseStart){
+    alert("⚠️ Merci de définir la date de début d’exercice");
+    throw new Error("Exercise start not defined");
   }
-  return new Date(new Date().getFullYear() + "-01-01")
+  return new Date(exerciseStart);
 }
 
 function initSelectors(){
@@ -560,6 +566,14 @@ annualDateInput.value = annualDate;
 annualDateInput.onchange = ()=>{
   annualDate = annualDateInput.value;
   localStorage.setItem(STORAGE.annualDate, annualDate);
+};
+const exerciseStartInput = document.getElementById("exerciseStartInput");
+exerciseStartInput.value = exerciseStart;
+
+exerciseStartInput.onchange = ()=>{
+  exerciseStart = exerciseStartInput.value;
+  localStorage.setItem(STORAGE.exerciseStart, exerciseStart);
+  buildPeriods();
 };
 
   initSelectors()
