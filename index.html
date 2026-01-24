@@ -179,17 +179,9 @@ button,input,select,textarea{width:100%;padding:8px;margin:5px 0}
 <script>
 
 function autoSwitchPeriodAtMidnight(){
-  setTimeout(() => {
-  buildPeriods()
-  update()
-
-  showToast()
-
-  autoSwitchPeriodAtMidnight()
-}, delay)
   const now = new Date()
 
-  // ms jusqu’à minuit
+  // ⏱️ ms jusqu’à minuit
   const nextMidnight = new Date(
     now.getFullYear(),
     now.getMonth(),
@@ -200,6 +192,12 @@ function autoSwitchPeriodAtMidnight(){
   const delay = nextMidnight - now
 
   setTimeout(() => {
+    buildPeriods()
+    update()
+    showToast() // ✅ toast discret
+    autoSwitchPeriodAtMidnight() // 🔁 nuit suivante
+  }, delay)
+}
     // 🔁 on reconstruit les périodes
     buildPeriods()
 
