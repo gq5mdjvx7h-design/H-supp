@@ -128,30 +128,6 @@ button,input,select,textarea{width:100%;padding:8px;margin:5px 0}
 <div class="popup" id="popup">
 <div class="popup-content">
 <h3 id="popupDate"></h3>
-<p id="popupCurrent"></p>
-<button onclick="addExtra(0.25)">+15 min</button>
-<button onclick="addExtra(0.5)">+30 min</button>
-<button onclick="addExtra(1)">+1 h</button>
-<button onclick="addExtra(2)">+2 h</button>
-<hr>
-<button onclick="addRecup(0.25)">-15 min</button>
-<button onclick="addRecup(0.5)">-30 min</button>
-<button onclick="addRecup(1)">-1 h</button>
-<hr>
-<label><b>Heures supplémentaires (HS)</b></label>
-<input type="number" id="manualExtra" step="0.25" placeholder="Saisir les heures SUP (ex: 1.5)">
-<small>➕ Heures ajoutées au compteur d'heures supplémentaires</small>
-<br><br>
-<label><b>Heures de récupération</b></label>
-<input type="number" id="manualRecup" step="0.25" placeholder="Saisir les heures RÉCUP (ex: 0.5)">
-<small>➖ Heures déduites en récupération</small>
-
-<hr>
-<label>
-  <input type="checkbox" id="isAbsent"> Jour d'absence
-</label>
-<input type="number" id="absentHours" step="0.25" min="0" placeholder="Heures d'absence">
-<h3 id="popupDate"></h3>
 
 <fieldset>
   <legend>➕ Heures supplémentaires</legend>
@@ -180,17 +156,6 @@ button,input,select,textarea{width:100%;padding:8px;margin:5px 0}
 
 <button onclick="saveManual()">Enregistrer</button>
 <button onclick="closePopup()">Fermer</button>
-<button onclick="saveManual()">Enregistrer</button>
-<button onclick="closePopup()">Fermer</button>
-</div>
-</div>
-
-<div class="popup" id="popupClosures">
-<div class="popup-content">
-<h3>Dates de clôture</h3>
-<div id="closuresInputs"></div>
-<button onclick="saveClosures()">Enregistrer</button>
-<button onclick="closeClosures()">Fermer</button>
 </div>
 </div>
 
