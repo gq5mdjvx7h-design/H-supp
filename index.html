@@ -84,6 +84,14 @@ button,input,select,textarea{width:100%;padding:8px;margin:5px 0}
     <label><b>Date de début d’exercice</b></label>
     <input type="date" id="exerciseStartInput">
 
+    <h2>Période comptable</h2>
+    <button onclick="openClosures()">📅 Définir / modifier les clôtures</button>
+    <select id="periodSelect"></select>
+    <p id="periodInfo"></p>
+
+    <button onclick="toggleLock()">🔒 Verrouiller / 🔓 Déverrouiller la période</button>
+    <p id="lockInfo"></p>
+
     <div id="rateContainer"></div>
 
     <hr>
@@ -163,6 +171,27 @@ button,input,select,textarea{width:100%;padding:8px;margin:5px 0}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
 
+function autoSwitchPeriodAtMidnight(){
+  const now = new Date()
+
+  // ⏱️ ms jusqu’à minuit
+  const nextMidnight = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate() + 1,
+    0, 0, 0, 0
+  )
+
+  const delay = nextMidnight - now
+
+  setTimeout(() => {
+    buildPeriods()
+    update()
+    showToast()           // 🕛 message discret
+    autoSwitchPeriodAtMidnight() // 🔁 nuit suivante
+  }, delay)
+}
+
 // ===== MULTI-ANNÉE =====
 let currentSuffix = localStorage.getItem("ACTIVE_YEAR_SUFFIX") || new Date().getFullYear();
 document.getElementById("activeYearLabel").textContent = currentSuffix;
@@ -178,6 +207,9 @@ function switchYear(){
 // ===== STOCKAGE DYNAMIQUE =====
 const STORAGE = {
   data: "DATA_REPORT_" + currentSuffix,
+  closures: "CLOSURES_REPORT_" + currentSuffix,
+  reports: "REPORTS_REPORT_" + currentSuffix,
+  locks: "LOCKS_REPORT_" + currentSuffix,
   annualDate: "ANNUAL_DATE_" + currentSuffix,
   specialDays: "SPECIAL_DAYS_" + currentSuffix,
   exerciseStart: "EXERCISE_START_" + currentSuffix
@@ -185,6 +217,9 @@ const STORAGE = {
 
 // ===== DONNÉES =====
 let data = JSON.parse(localStorage.getItem(STORAGE.data)) || {};
+let closures = JSON.parse(localStorage.getItem(STORAGE.closures)) || [];
+let reports = JSON.parse(localStorage.getItem(STORAGE.reports)) || {};
+let locks = JSON.parse(localStorage.getItem(STORAGE.locks)) || {};
 let annualDate = localStorage.getItem(STORAGE.annualDate) || "";
 let annualRate = 10;
 let specialDays = JSON.parse(localStorage.getItem(STORAGE.specialDays)) || {};
@@ -195,8 +230,11 @@ const ALLOW_RECUP_FREE = true;
 const months=["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"]
 const monthSelect=document.getElementById("monthSelect")
 const yearSelect=document.getElementById("yearSelect")
+const periodSelect=document.getElementById("periodSelect")
 const calendar=document.getElementById("calendar")
+const periodInfo=document.getElementById("periodInfo")
 const totaux=document.getElementById("totaux")
+const lockInfo = document.getElementById("lockInfo")
 const popup = document.getElementById("popup")
 const popupDate = document.getElementById("popupDate")
 const manualExtra = document.getElementById("manualExtra")
@@ -212,7 +250,7 @@ let view=new Date()
 let viewMonth=view.getMonth()
 let viewYear=view.getFullYear()
 let selectedDate=""
-
+let currentPeriodIndex=0
 // 🔒 Clé de date locale (évite les bugs UTC / changement d’année)
 function dateKeyLocal(d){
   const y = d.getFullYear()
@@ -246,16 +284,89 @@ yearSelect.appendChild(o)
 }
 }
 
+function openClosures(){
+const box=document.getElementById("closuresInputs")
+box.innerHTML=""
+for(let i=0;i<12;i++){
+const input=document.createElement("input")
+input.type="date"
+input.value=closures[i]||""
+box.appendChild(input)
+}
+document.getElementById("popupClosures").style.display="flex"
+}
+
+function closeClosures(){document.getElementById("popupClosures").style.display="none"}
+
+function saveClosures(){
+const inputs=[...document.querySelectorAll("#closuresInputs input")]
+closures=inputs.map(i=>i.value).filter(v=>v).sort()
+localStorage.setItem(STORAGE.closures,JSON.stringify(closures))
+buildPeriods()
+closeClosures()
+}
+
+function buildPeriods(){
+  periodSelect.innerHTML = ""
+  let start = getBaseStartDate()
+
+  closures.forEach((c, i) => {
+    const end = new Date(c)
+    const opt = document.createElement("option")
+    opt.value = i
+    opt.textContent = `${start.toLocaleDateString()} → ${end.toLocaleDateString()}`
+    periodSelect.appendChild(opt)
+
+    start = new Date(c)
+    start.setDate(start.getDate() + 1)
+  })
+
+  const opt = document.createElement("option")
+  opt.value = closures.length
+  opt.textContent = `${start.toLocaleDateString()} → en cours`
+  periodSelect.appendChild(opt)
+
+  currentPeriodIndex = periodSelect.options.length - 1
+  periodSelect.selectedIndex = currentPeriodIndex
+  update()
+}
+
+function toggleLock(){
+  const i=currentPeriodIndex
+  locks[i]=!locks[i]
+  localStorage.setItem(STORAGE.locks,JSON.stringify(locks))
+  update()
+}
+
+function getCurrentPeriod(){
+  let start = getBaseStartDate()
+
+  for(let i = 0; i <= closures.length; i++){
+    const end = i < closures.length ? new Date(closures[i]) : new Date(2099,11,31)
+    if(i === currentPeriodIndex){
+      return { start, end, index: i }
+    }
+    start = new Date(end)
+    start.setDate(start.getDate() + 1)
+  }
+  return null
+}
+
 function generateCalendar(){
 calendar.innerHTML=""
 const firstDay = new Date(viewYear, viewMonth, 1).getDay()
 const offset = firstDay === 0 ? 6 : firstDay - 1
 const days=new Date(viewYear,viewMonth+1,0).getDate()
 for(let i=0;i<offset;i++)calendar.appendChild(document.createElement("div"))
+const period=getCurrentPeriod()
 for(let d=1;d<=days;d++){
 const key=`${viewYear}-${String(viewMonth+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`
 const div=document.createElement("div")
 div.className="day"
+if(period){
+const dk=new Date(key)
+if(dk>=period.start && dk<=period.end){div.classList.add("in-period")}
+}
 const day = data[key] || { extra:0, recup:0, absent:0 }
 let html = `<strong>${d}</strong>`
 
@@ -287,7 +398,24 @@ calendar.appendChild(div)
 }
 
 function calculate(){
+const period=getCurrentPeriod()
+if(!period){ totaux.innerHTML=""; periodInfo.innerHTML=""; return }
+const reportPrev = reports[period.index-1] || 0
+lockInfo.textContent = locks[period.index] ? "🔒 Période verrouillée" : "🔓 Période déverrouillée"
+periodInfo.innerHTML=`<b>Période :</b> ${period.start.toLocaleDateString()} → ${period.end.getFullYear()===2099?"en cours":period.end.toLocaleDateString()}<br>
+<b>Report précédent :</b> ${reportPrev.toFixed(2)} h`
 let weeks={}, absences={}, totalRecup=0, details=[]
+Object.entries(data).forEach(([k,v])=>{
+const d=new Date(k)
+if(d>=period.start&&d<=period.end){
+const m=new Date(d); const day=m.getDay()||7
+if(day!==1)m.setDate(m.getDate()-(day-1))
+const key = dateKeyLocal(m)
+weeks[key]=(weeks[key]||0)+v.extra
+    absences[key]=(absences[key]||0)+(v.absent||0)
+totalRecup+=v.recup||0
+}
+})
 let h25=0,h50=0
 Object.entries(weeks).forEach(([week,extra])=>{
 const absent = absences[week]||0
@@ -306,6 +434,12 @@ details.push(`Semaine du ${new Date(week).toLocaleDateString()} : Base ${base}h 
 })
 const brut25 = h25*1.25
 const brut50 = h50*1.5
+const brut = brut25+brut50+reportPrev
+const net = brut-totalRecup
+if(!locks[period.index]){
+reports[period.index]=net
+localStorage.setItem(STORAGE.reports,JSON.stringify(reports))
+}
 totaux.innerHTML = `
 <details class="calc-details">
   <summary>📊 Détails des calculs</summary>
@@ -334,8 +468,37 @@ let annualAbsHours = 0
 let annualAbsDays = 0
 let annualFerieDays = 0
 let annualFerieHours = 0
+const annualLimit = new Date(annualDate)
+Object.entries(data).forEach(([date, v]) => {
+  const d = new Date(date)
 
-const rate = annualRate || 10;
+  // seulement jusqu’à la clôture annuelle
+  if(d >= period.start && d <= annualLimit){
+
+    const abs = v.absent || 0
+    if(abs > 0){
+      if(specialDays[date] === "ferie"){
+        // 🎌 férié chômé
+        annualFerieDays++
+        annualFerieHours += abs
+      }else{
+        // ❌ absence classique
+        annualAbsHours += abs
+        if(abs >= 7) annualAbsDays++
+      }
+    }
+  }
+})
+if(shouldShowAnnualClosure(period)){
+  rateContainer.innerHTML = `
+    <div style="background:#fff3e0;padding:10px;border-radius:6px;border:1px solid #ff9800;margin-top:10px;">
+      <label><b>Taux horaire pour cette clôture (€)</b></label>
+      <input type="number" id="hourlyRateInput" step="0.5"
+      value="${annualRate}"
+      oninput="annualRate = Number(this.value) || 10; calculate()">
+    </div>`;
+
+  const rate = annualRate || 10;
   const paiement = net * rate;
 
 totaux.innerHTML += `
@@ -363,7 +526,8 @@ totaux.innerHTML += `
 }
 
 function openPopup(date){
-  
+  if(locks[currentPeriodIndex]){alert("🔒 Cette période est verrouillée");return}
+
 selectedDate=date
 const d=data[date]||{extra:0,recup:0,absent:0}
 popupDate.textContent=date
@@ -405,7 +569,32 @@ function save(){ localStorage.setItem(STORAGE.data,JSON.stringify(data)) }
 
 function isIOS(){return /iPad|iPhone|iPod/.test(navigator.userAgent)}
 
+function exportJSON(){
+  const payload = { data, closures, reports }
+  const json = JSON.stringify(payload, null, 2)
+  const blob = new Blob([json], { type: "application/json" })
+  const filename = `heures_sup_${currentSuffix}.json`
 
+  // 🌍 iOS + Android récents → feuille de partage
+  if (navigator.canShare && navigator.canShare({ files: [new File([blob], filename)] })) {
+    const file = new File([blob], filename, { type: "application/json" })
+    navigator.share({
+      files: [file],
+      title: "Sauvegarde heures supplémentaires"
+    })
+    return
+  }
+
+  // 💻 PC / Mac / anciens navigateurs → téléchargement
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement("a")
+  a.href = url
+  a.download = filename
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  URL.revokeObjectURL(url)
+}
 
 function importJSON(){
 if(isIOS()){
@@ -427,9 +616,32 @@ input.click()
 
 function confirmImportJSON(){loadJSON(jsonArea.value);closeJSONPopup()}
 
+function loadJSON(text){
+let obj
+try{obj = JSON.parse(text)}catch(e){alert("❌ JSON invalide");return}
+if(!obj.data||!obj.closures||!obj.reports){alert("❌ Format incorrect");return}
+data=obj.data; closures=obj.closures; reports=obj.reports
+localStorage.setItem(STORAGE.data,JSON.stringify(data))
+localStorage.setItem(STORAGE.closures,JSON.stringify(closures))
+localStorage.setItem(STORAGE.reports,JSON.stringify(reports))
+buildPeriods(); update(); alert("✅ Import réussi")
+}
 
 function closeJSONPopup(){popupJSON.style.display = "none"}
 
+function autoBackup(){
+const key="AUTO_BACKUP_HS"
+const last=localStorage.getItem(key)
+const now=new Date().toISOString().slice(0,7)
+if(last===now)return
+const payload={data,closures,reports}
+const blob=new Blob([JSON.stringify(payload)],{type:"application/json"})
+const a=document.createElement("a")
+a.href=URL.createObjectURL(blob)
+a.download=`backup_heures_sup_${now}.json`
+a.click()
+localStorage.setItem(key,now)
+}
 async function importFeries(){
   const year = currentSuffix
 
@@ -466,6 +678,7 @@ function update(){generateCalendar();calculate();autoBackup()}
 
 monthSelect.onchange=()=>{viewMonth=+monthSelect.value;generateCalendar()}
 yearSelect.onchange=()=>{viewYear=+yearSelect.value;generateCalendar()}
+periodSelect.onchange=()=>{currentPeriodIndex=+periodSelect.value;update()}
 
 
 const annualDateInput = document.getElementById("annualDateInput");
@@ -480,8 +693,13 @@ exerciseStartInput.value = exerciseStart;
 exerciseStartInput.onchange = ()=>{
   exerciseStart = exerciseStartInput.value;
   localStorage.setItem(STORAGE.exerciseStart, exerciseStart);
-  
-  
+  buildPeriods();
+};
+
+initSelectors()
+buildPeriods()
+autoSwitchPeriodAtMidnight()
+
   // ===== FONCTION DE VÉRIFICATION DU MOIS EXACT =====
 function exportMonthlyPDF(){
   const { jsPDF } = window.jspdf
@@ -520,8 +738,17 @@ function exportMonthlyPDF(){
   y += 6
   pdf.text(`Total absences : ${totalAbs.toFixed(2)} h`, 10, y)
 
-  pdf.save(`heures_sup_${monthName}_${viewYear}.
-  
+  pdf.save(`heures_sup_${monthName}_${viewYear}.pdf`)
+}
+  function shouldShowAnnualClosure(period){
+  if(!annualDate) return false;
+  const ad = new Date(annualDate);
+  if(ad < period.start || ad > period.end) return false;
+  return (
+    ad.getFullYear() === viewYear &&
+    ad.getMonth() === viewMonth
+  );
+}
 function showToast(){
   const toast = document.getElementById("toast")
   if(!toast) return
