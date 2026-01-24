@@ -712,6 +712,25 @@ exerciseStartInput.onchange = ()=>{
 initSelectors()
 buildPeriods()
 autoSwitchPeriodAtMidnight()
+function showToast(){
+  const toast = document.getElementById("toast")
+  if(!toast) return
+
+  toast.style.opacity = "1"
+
+  setTimeout(() => {
+    toast.style.opacity = "0"
+  }, 3000)
+}
+setTimeout(() => {
+  buildPeriods()
+  update()
+
+  // 🔔 message discret
+  showToast()
+
+  autoSwitchPeriodAtMidnight()
+}, delay)
 
   // ===== FONCTION DE VÉRIFICATION DU MOIS EXACT =====
 function exportMonthlyPDF(){
