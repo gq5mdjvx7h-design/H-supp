@@ -356,7 +356,11 @@ let annualAbsDays = 0
 
 Object.entries(data).forEach(([date, v])=>{
   const d = new Date(date)
-  if(d.getFullYear() == currentSuffix){
+
+  if(
+    d.getFullYear() == currentSuffix &&
+    d <= annualLimit
+  ){
     const abs = v.absent || 0
     annualAbsHours += abs
     if(abs >= 7) annualAbsDays++
