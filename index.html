@@ -710,27 +710,31 @@ exerciseStartInput.onchange = ()=>{
 };
 
 initSelectors()
-buildPeriods()
-autoSwitchPeriodAtMidnight()
-function showToast(){
-  const toast = document.getElementById("toast")
-  if(!toast) return
 
-  toast.style.opacity = "1"
+buildPeriods()
+function autoSwitchPeriodAtMidnight(){
+  const now = new Date()
+
+  const nextMidnight = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate() + 1,
+    0, 0, 0, 0
+  )
+
+  const delay = nextMidnight - now
 
   setTimeout(() => {
-    toast.style.opacity = "0"
-  }, 3000)
+    buildPeriods()
+    update()
+
+    // 🔔 message discret
+    showToast()
+
+    // 🔁 replanifie pour la nuit suivante
+    autoSwitchPeriodAtMidnight()
+  }, delay)
 }
-setTimeout(() => {
-  buildPeriods()
-  update()
-
-  // 🔔 message discret
-  showToast()
-
-  autoSwitchPeriodAtMidnight()
-}, delay)
 
   // ===== FONCTION DE VÉRIFICATION DU MOIS EXACT =====
 function exportMonthlyPDF(){
