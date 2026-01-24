@@ -312,6 +312,7 @@ if(period){
 const dk=new Date(key)
 if(dk>=period.start && dk<=period.end){div.classList.add("in-period")}
 }
+const day = data[key] || { extra:0, recup:0, absent:0 }
 let html = `<strong>${d}</strong>`
 
 if(day.extra){
@@ -407,21 +408,19 @@ const annualLimit = new Date(annualDate)
 Object.entries(data).forEach(([date, v])=>{
   const d = new Date(date)
 
-  if(
-    d >= period.start &&
-    d <= annualLimit
-  ){
+  if(d >= period.start && d <= annualLimit){
     const abs = v.absent || 0
 
     if(abs > 0){
-      annualAbsHours += abs
-      if(abs >= 7) annualAbsDays++
-    }
-
-    // 🎌 COMPTEUR FÉRIÉS
-    if(specialDays[date] === "ferie"){
-      annualFerieDays++
-      annualFerieHours += abs || 7
+      if(specialDays[date] === "ferie"){
+        // 🎌 JOUR FÉRIÉ
+        annualFerieDays++
+        annualFerieHours += abs || 7
+      }else{
+        // ❌ ABSENCE CLASSIQUE
+        annualAbsHours += abs
+        if(abs >= 7) annualAbsDays++
+      }
     }
   }
 })
