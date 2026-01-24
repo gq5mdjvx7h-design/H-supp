@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Compteur Heures Sup – AUTO (Report + détail majorations)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+body{font-family:Arial,sans-serif;background:#f2f2f2;padding:15px}
+h1,h2{text-align:center}
+.config,.totaux{background:#fff;padding:15px;border-radius:8px;max-width:900px;margin:15px auto}
+.calendar-wrapper{max-width:900px;margin:20px auto}
+.weekdays,.calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
+.weekday{text-align:center;font-weight:bold;background:#ddd;padding:8px 0;border-radius:6px}
+.day{background:#fff;padding:8px;border-radius:6px;cursor:pointer;text-align:center;min-height:70px}
+.day.in-period{border:2px solid #2e7d32;background:#e8f5e9}
+.month-nav{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+button,input,select,textarea{width:100%;padding:8px;margin:5px 0}
+.popup{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:10}
+.popup-content{background:#fff;padding:20px;width:380px;border-radius:10px}
+.breakdown{background:#f9f9f9;padding:10px;border-radius:6px;margin-top:10px;font-size:14px}
+.day.today{outline:3px solid #ff9800;box-shadow:0 0 6px rgba(255,152,0,.8)}
+</style>
+</head>
+<body>
+
+<h1>Compteur Heures Sup</h1>
+
+<p style="text-align:center">
+  Exercice : <b id="activeYearLabel"></b>
+  <button onclick="switchYear()">📁 Changer</button>
+</p>
+
+
+<div class="config">
+<h2>Période comptable</h2>
+<button onclick="openClosures()">📅 Définir / modifier les clôtures</button>
+<select id="periodSelect"></select>
+<p id="periodInfo"></p>
+<button onclick="toggleLock()">🔒 Verrouiller / 🔓 Déverrouiller la période</button>
+<p id="lockInfo"></p>
+
+<div id="rateContainer"></div>
+
+<hr>
+<button onclick="exportJSON()">⬇️ Exporter (.json)</button>
+<button onclick="importJSON()">⬆️ Importer (.json)</button>
+
+<hr>
+<h2>Clôture annuelle</h2>
+<label>Date de clôture annuelle</label>
+<input type="date" id="annualDateInput">
+</div>
+
+<div class="calendar-wrapper">
+<div class="month-nav">
+<select id="monthSelect"></select>
+<select id="yearSelect"></select>
+</div>
+
+<div class="weekdays">
+<div class="weekday">Lun</div><div class="weekday">Mar</div><div class="weekday">Mer</div>
+<div class="weekday">Jeu</div><div class="weekday">Ven</div><div class="weekday">Sam</div><div class="weekday">Dim</div>
+</div>
+<div class="calendar" id="calendar"></div>
+</div>
+
+<div class="totaux" id="totaux"></div>
+
+<div class="popup" id="popup">
+<div class="popup-content">
+<h3 id="popupDate"></h3>
+<p id="popupCurrent"></p>
+<button onclick="addExtra(0.25)">+15 min</button>
+<button onclick="addExtra(0.5)">+30 min</button>
+<button onclick="addExtra(1)">+1 h</button>
+<button onclick="addExtra(2)">+2 h</button>
+<hr>
+<button onclick="addRecup(0.25)">-15 min</button>
+<button onclick="addRecup(0.5)">-30 min</button>
+<button onclick="addRecup(1)">-1 h</button>
+<hr>
+<label><b>Heures supplémentaires (HS)</b></label>
+<input type="number" id="manualExtra" step="0.25" placeholder="Saisir les heures SUP (ex: 1.5)">
+<small>➕ Heures ajoutées au compteur d'heures supplémentaires</small>
+<br><br>
+<label><b>Heures de récupération</b></label>
+<input type="number" id="manualRecup" step="0.25" placeholder="Saisir les heures RÉCUP (ex: 0.5)">
+<small>➖ Heures déduites en récupération</small>
+
+<hr>
+<label>
+  <input type="checkbox" id="isAbsent"> Jour d'absence
+</label>
+<input type="number" id="absentHours" step="0.25" min="0" placeholder="Heures d'absence">
+
+<button onclick="saveManual()">Enregistrer</button>
+<button onclick="closePopup()">Fermer</button>
+</div>
+</div>
+
+<div class="popup" id="popupClosures">
+<div class="popup-content">
+<h3>Dates de clôture</h3>
+<div id="closuresInputs"></div>
+<button onclick="saveClosures()">Enregistrer</button>
+<button onclick="closeClosures()">Fermer</button>
+</div>
+</div>
+
+<div class="popup" id="popupJSON">
+<div class="popup-content">
+<h3 id="jsonTitle"></h3>
+<textarea id="jsonArea" style="width:100%;height:200px"></textarea>
+<button onclick="confirmImportJSON()">Importer</button>
+<button onclick="closeJSONPopup()">Fermer</button>
+</div>
+</div>
+
+<script>
+
+// ===== MULTI-ANNÉE =====
+  const STORAGE = {
+  data: "DATA_REPORT_" + currentSuffix,
+  closures: "CLOSURES_REPORT_" + currentSuffix,
+  reports: "REPORTS_REPORT_" + currentSuffix,
+  locks: "LOCKS_REPORT_" + currentSuffix,
+  annualDate: "ANNUAL_DATE_" + currentSuffix
+};
+// OPTION : autoriser la récup même sans heures sup le même jour
+const ALLOW_RECUP_FREE = true;
+const months=["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"]
+const monthSelect=document.getElementById("monthSelect")
+const yearSelect=document.getElementById("yearSelect")
+const periodSelect=document.getElementById("periodSelect")
+const calendar=document.getElementById("calendar")
+const periodInfo=document.getElementById("periodInfo")
+const totaux=document.getElementById("totaux")
+
+let view=new Date()
+let viewMonth=view.getMonth()
+let viewYear=view.getFullYear()
+let selectedDate=""
+let currentPeriodIndex=0
+
+function getBaseStartDate(){
+  if(closures.length){
+    return new Date(new Date(closures[0]).getFullYear() + "-01-01")
+  }
+  return new Date(new Date().getFullYear() + "-01-01")
+}
+
+function initSelectors(){
+monthSelect.innerHTML=""
+months.forEach((m,i)=>{
+const o=document.createElement("option")
+o.value=i;o.textContent=m
+if(i===viewMonth)o.selected=true
+monthSelect.appendChild(o)
+})
+yearSelect.innerHTML=""
+for(let y=viewYear-2;y<=2050;y++){
+const o=document.createElement("option")
+o.value=y;o.textContent=y
+if(y===viewYear)o.selected=true
+yearSelect.appendChild(o)
+}
+}
+
+function openClosures(){
+const box=document.getElementById("closuresInputs")
+box.innerHTML=""
+for(let i=0;i<12;i++){
+const input=document.createElement("input")
+input.type="date"
+input.value=closures[i]||""
+box.appendChild(input)
+}
+document.getElementById("popupClosures").style.display="flex"
+}
+
+function closeClosures(){document.getElementById("popupClosures").style.display="none"}
+
+function saveClosures(){
+const inputs=[...document.querySelectorAll("#closuresInputs input")]
+closures=inputs.map(i=>i.value).filter(v=>v).sort()
+localStorage.setItem(STORAGE.closures,JSON.stringify(closures))
+buildPeriods()
+closeClosures()
+}
+
+function buildPeriods(){
+  periodSelect.innerHTML = ""
+  let start = getBaseStartDate()
+
+  closures.forEach((c, i) => {
+    const end = new Date(c)
+    const opt = document.createElement("option")
+    opt.value = i
+    opt.textContent = `${start.toLocaleDateString()} → ${end.toLocaleDateString()}`
+    periodSelect.appendChild(opt)
+
+    start = new Date(c)
+    start.setDate(start.getDate() + 1)
+  })
+
+  const opt = document.createElement("option")
+  opt.value = closures.length
+  opt.textContent = `${start.toLocaleDateString()} → en cours`
+  periodSelect.appendChild(opt)
+
+  currentPeriodIndex = periodSelect.options.length - 1
+  periodSelect.selectedIndex = currentPeriodIndex
+  update()
+}
+
+function toggleLock(){
+  const i=currentPeriodIndex
+  locks[i]=!locks[i]
+  localStorage.setItem(STORAGE.locks,JSON.stringify(locks))
+  update()
+}
+
+function getCurrentPeriod(){
+  let start = getBaseStartDate()
+
+  for(let i = 0; i <= closures.length; i++){
+    const end = i < closures.length ? new Date(closures[i]) : new Date(2099,11,31)
+    if(i === currentPeriodIndex){
+      return { start, end, index: i }
+    }
+    start = new Date(end)
+    start.setDate(start.getDate() + 1)
+  }
+  return null
+}
+
+function generateCalendar(){
+calendar.innerHTML=""
+const firstDay=new Date(viewYear,viewMonth,1).getDay()
+const offset=(firstDay+6)%7
+const days=new Date(viewYear,viewMonth+1,0).getDate()
+for(let i=0;i<offset;i++)calendar.appendChild(document.createElement("div"))
+const period=getCurrentPeriod()
+for(let d=1;d<=days;d++){
+const key=`${viewYear}-${String(viewMonth+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`
+const div=document.createElement("div")
+div.className="day"
+if(period){
+const dk=new Date(key)
+if(dk>=period.start && dk<=period.end){div.classList.add("in-period")}
+}
+const day=data[key]||{extra:0,recup:0}
+div.innerHTML=d+`<br>+${day.extra}h<br>- ${day.recup}h`
+if(key===new Date().toISOString().slice(0,10))div.classList.add("today")
+div.onclick=()=>openPopup(key)
+calendar.appendChild(div)
+}
+}
+
+function calculate(){
+const period=getCurrentPeriod()
+if(!period){ totaux.innerHTML=""; periodInfo.innerHTML=""; return }
+const reportPrev = reports[period.index-1] || 0
+lockInfo.textContent = locks[period.index] ? "🔒 Période verrouillée" : "🔓 Période déverrouillée"
+periodInfo.innerHTML=`<b>Période :</b> ${period.start.toLocaleDateString()} → ${period.end.getFullYear()===2099?"en cours":period.end.toLocaleDateString()}<br>
+<b>Report précédent :</b> ${reportPrev.toFixed(2)} h`
+let weeks={}, absences={}, totalRecup=0, details=[]
+Object.entries(data).forEach(([k,v])=>{
+const d=new Date(k)
+if(d>=period.start&&d<=period.end){
+const m=new Date(d); const day=m.getDay()||7
+if(day!==1)m.setDate(m.getDate()-(day-1))
+const key=m.toISOString().slice(0,10)
+weeks[key]=(weeks[key]||0)+v.extra
+    absences[key]=(absences[key]||0)+(v.absent||0)
+totalRecup+=v.recup||0
+}
+})
+let h25=0,h50=0
+Object.entries(weeks).forEach(([week,extra])=>{
+const absent = absences[week]||0
+    const base = Math.max(0,35-absent)
+    const total=base+extra
+let w25=0,w50=0
+if(total > 35) {
+  w25 = Math.min(total - 35, 8)
+}
+
+if(total > 43) {
+  w50 = total - 43
+}
+h25+=w25; h50+=w50
+details.push(`Semaine du ${new Date(week).toLocaleDateString()} : Base ${base}h (Abs ${absent}h) → ${w25}h à 25% / ${w50}h à 50%`)
+})
+const brut25 = h25*1.25
+const brut50 = h50*1.5
+const brut = brut25+brut50+reportPrev
+const net = brut-totalRecup
+if(!locks[period.index]){
+reports[period.index]=net
+localStorage.setItem(STORAGE.reports,JSON.stringify(reports))
+}
+totaux.innerHTML=`<div class="breakdown">${details.join("<br>")}<hr>
+25% : ${h25}h × 1,25 = ${brut25.toFixed(2)} h<br>
+50% : ${h50}h × 1,50 = ${brut50.toFixed(2)} h<br>
+Report précédent : ${reportPrev.toFixed(2)} h</div><hr>
+<b>Solde brut :</b> ${brut.toFixed(2)} h<br>
+Récup : ${totalRecup.toFixed(2)} h<br>
+<b>Solde net :</b> ${net.toFixed(2)} h`;
+
+// --- LOGIQUE DE CLÔTURE ANNUELLE ---
+const rateContainer = document.getElementById("rateContainer");
+rateContainer.innerHTML = "";
+
+if(shouldShowAnnualClosure(period)){
+  rateContainer.innerHTML = `
+    <div style="background:#fff3e0;padding:10px;border-radius:6px;border:1px solid #ff9800;margin-top:10px;">
+      <label><b>Taux horaire pour cette clôture (€)</b></label>
+      <input type="number" id="hourlyRateInput" step="0.5"
+      value="${annualRate}"
+      oninput="annualRate = Number(this.value) || 10; calculate()">
+    </div>`;
+
+  const rate = annualRate || 10;
+  const paiement = net * rate;
+
+  totaux.innerHTML += `
+    <hr>
+    <div style="background:#e8f5e9;padding:15px;border:2px solid #2e7d32;border-radius:8px;">
+      <h3 style="margin:0;color:#2e7d32;">🎯 Clôture Annuelle</h3>
+      Solde à liquider : ${net.toFixed(2)} h<br>
+      Paiement (${rate}€/h) : <b>${paiement.toFixed(2)} €</b>
+    </div>`;
+}
+
+}
+
+function openPopup(date){
+  if(locks[currentPeriodIndex]){alert("🔒 Cette période est verrouillée");return}
+
+selectedDate=date
+const d=data[date]||{extra:0,recup:0,absent:0}
+popupDate.textContent=date
+popupCurrent.textContent=`HS ${d.extra} h | Récup ${d.recup} h`
+manualExtra.value=d.extra
+manualRecup.value=d.recup
+  absentHours.value=d.absent||0
+  isAbsent.checked=(d.absent||0)>0
+document.getElementById("popup").style.display="flex"
+}
+
+function closePopup(){document.getElementById("popup").style.display="none";update()}
+
+function addExtra(h){
+  if(!data[selectedDate]) data[selectedDate]={extra:0,recup:0}
+  data[selectedDate].extra=Math.round((data[selectedDate].extra+h)*4)/4
+  save();closePopup()
+}
+
+function addRecup(h){
+  if(!data[selectedDate]) data[selectedDate]={extra:0,recup:0}
+  const newVal = Math.round((data[selectedDate].recup+h)*4)/4
+  data[selectedDate].recup = ALLOW_RECUP_FREE ? newVal : Math.min(newVal, data[selectedDate].extra)
+  save();closePopup()
+}
+
+function saveManual(){
+  const extra=Math.max(0,Number(manualExtra.value)||0)
+  const recup=Math.max(0,Number(manualRecup.value)||0)
+  const absent = isAbsent.checked ? Math.max(0,Number(absentHours.value)||0) : 0
+  data[selectedDate]={
+    extra:Math.round(extra*4)/4,
+    recup: ALLOW_RECUP_FREE ? Math.round(recup*4)/4 : Math.min(Math.round(recup*4)/4, extra),
+    absent:Math.round(absent*4)/4
+  }
+  save();closePopup()
+}
+
+function save(){ localStorage.setItem(STORAGE.data,JSON.stringify(data)) }
+
+function isIOS(){return /iPad|iPhone|iPod/.test(navigator.userAgent)}
+
+function exportJSON(){
+const payload = { data, closures, reports }
+const json = JSON.stringify(payload)
+if(isIOS()){
+jsonTitle.textContent = "Copiez ce texte (Export)"
+jsonArea.value = json
+popupJSON.style.display = "flex"
+}else{
+const blob = new Blob([json], {type:"application/json"})
+const a = document.createElement("a")
+a.href = URL.createObjectURL(blob)
+a.download = "heures_sup_backup.json"
+a.click()
+}
+}
+
+function importJSON(){
+if(isIOS()){
+jsonTitle.textContent = "Collez le texte JSON (Import)"
+jsonArea.value = ""
+popupJSON.style.display = "flex"
+}else{
+const input = document.createElement("input")
+input.type = "file"
+input.accept = ".json"
+input.onchange = e => {
+const reader = new FileReader()
+reader.onload = () => loadJSON(reader.result)
+reader.readAsText(e.target.files[0])
+}
+input.click()
+}
+}
+
+function confirmImportJSON(){loadJSON(jsonArea.value);closeJSONPopup()}
+
+function loadJSON(text){
+let obj
+try{obj = JSON.parse(text)}catch(e){alert("❌ JSON invalide");return}
+if(!obj.data||!obj.closures||!obj.reports){alert("❌ Format incorrect");return}
+data=obj.data; closures=obj.closures; reports=obj.reports
+localStorage.setItem(STORAGE.data,JSON.stringify(data))
+localStorage.setItem(STORAGE.closures,JSON.stringify(closures))
+localStorage.setItem(STORAGE.reports,JSON.stringify(reports))
+buildPeriods(); update(); alert("✅ Import réussi")
+}
+
+function closeJSONPopup(){popupJSON.style.display = "none"}
+
+function autoBackup(){
+const key="AUTO_BACKUP_HS"
+const last=localStorage.getItem(key)
+const now=new Date().toISOString().slice(0,7)
+if(last===now)return
+const payload={data,closures,reports}
+const blob=new Blob([JSON.stringify(payload)],{type:"application/json"})
+const a=document.createElement("a")
+a.href=URL.createObjectURL(blob)
+a.download=`backup_heures_sup_${now}.json`
+a.click()
+localStorage.setItem(key,now)
+}
+
+function update(){generateCalendar();calculate();autoBackup()}
+
+monthSelect.onchange=()=>{viewMonth=+monthSelect.value;generateCalendar()}
+yearSelect.onchange=()=>{viewYear=+yearSelect.value;generateCalendar()}
+periodSelect.onchange=()=>{currentPeriodIndex=+periodSelect.value;update()}
+
+
+const annualDateInput = document.getElementById("annualDateInput");
+annualDateInput.value = annualDate;
+annualDateInput.onchange = ()=>{
+  annualDate = annualDateInput.value;
+  localStorage.setItem(STORAGE.annualDate, annualDate);
+};
+
+initSelectors(); buildPeriods()
+
+
+// ===== FONCTION DE VÉRIFICATION DU MOIS EXACT =====
+function shouldShowAnnualClosure(period){
+  if(!annualDate) return false;
+  const ad = new Date(annualDate);
+  if(ad < period.start || ad > period.end) return false;
+  return (
+    ad.getFullYear() === viewYear &&
+    ad.getMonth() === viewMonth
+  );
+}
+</script>
+
+
+</body>
+</html>
