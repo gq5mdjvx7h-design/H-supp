@@ -203,6 +203,13 @@ let viewMonth=view.getMonth()
 let viewYear=view.getFullYear()
 let selectedDate=""
 let currentPeriodIndex=0
+// 🔒 Clé de date locale (évite les bugs UTC / changement d’année)
+function dateKeyLocal(d){
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, "0")
+  const day = String(d.getDate()).padStart(2, "0")
+  return `${y}-${m}-${day}`
+}
 
 function getBaseStartDate(){
   if(!exerciseStart){
@@ -355,7 +362,7 @@ const d=new Date(k)
 if(d>=period.start&&d<=period.end){
 const m=new Date(d); const day=m.getDay()||7
 if(day!==1)m.setDate(m.getDate()-(day-1))
-const key=m.toISOString().slice(0,10)
+const key = dateKeyLocal(m)
 weeks[key]=(weeks[key]||0)+v.extra
     absences[key]=(absences[key]||0)+(v.absent||0)
 totalRecup+=v.recup||0
