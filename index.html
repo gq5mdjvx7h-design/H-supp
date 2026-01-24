@@ -5,6 +5,19 @@
 <title>Compteur Heures Sup – AUTO (Report + détail majorations)</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
+/* PARTIE 3 — détails repliables */
+.calc-details summary{
+  cursor:pointer;
+  font-weight:bold;
+  background:#e3f2fd;
+  padding:8px;
+  border-radius:6px;
+  margin-bottom:8px;
+}
+
+.calc-details[open] summary{
+  background:#bbdefb;
+}
 body{font-family:Arial,sans-serif;background:#f2f2f2;padding:15px}
 h1,h2{text-align:center}
 .config,.totaux{background:#fff;padding:15px;border-radius:8px;max-width:900px;margin:15px auto}
@@ -48,7 +61,11 @@ button,input,select,textarea{width:100%;padding:8px;margin:5px 0}
 </p>
 
 
-<div class="config">
+<details class="section" open>
+  <summary>🔧 Configuration</summary>
+  <div class="config">
+  </div>
+</details>
 <hr>
 <label><b>Date de début d’exercice</b></label>
 <input type="date" id="exerciseStartInput">
@@ -75,7 +92,7 @@ button,input,select,textarea{width:100%;padding:8px;margin:5px 0}
 <button onclick="importFeries()">🇫🇷 Importer les jours fériés officiels</button>
 </div>
 
-<div class="calendar-wrapper">
+<div class="calendar-wrapper main-zone">
 <div class="month-nav">
 <select id="monthSelect"></select>
 <select id="yearSelect"></select>
@@ -88,7 +105,7 @@ button,input,select,textarea{width:100%;padding:8px;margin:5px 0}
 <div class="calendar" id="calendar"></div>
 </div>
 
-<div class="totaux" id="totaux"></div>
+<div class="totaux main-zone" id="totaux"></div>
 
 <div class="popup" id="popup">
 <div class="popup-content">
@@ -392,13 +409,24 @@ if(!locks[period.index]){
 reports[period.index]=net
 localStorage.setItem(STORAGE.reports,JSON.stringify(reports))
 }
-totaux.innerHTML=`<div class="breakdown">${details.join("<br>")}<hr>
-25% : ${h25}h × 1,25 = ${brut25.toFixed(2)} h<br>
-50% : ${h50}h × 1,50 = ${brut50.toFixed(2)} h<br>
-Report précédent : ${reportPrev.toFixed(2)} h</div><hr>
+totaux.innerHTML = `
+<details class="calc-details">
+  <summary>📊 Détails des calculs</summary>
+  <div class="breakdown">
+    ${details.join("<br>")}
+    <hr>
+    25% : ${h25}h × 1,25 = ${brut25.toFixed(2)} h<br>
+    50% : ${h50}h × 1,50 = ${brut50.toFixed(2)} h<br>
+    Report précédent : ${reportPrev.toFixed(2)} h
+  </div>
+</details>
+
+<hr>
+
 <b>Solde brut :</b> ${brut.toFixed(2)} h<br>
 Récup : ${totalRecup.toFixed(2)} h<br>
-<b>Solde net :</b> ${net.toFixed(2)} h`;
+<b>Solde net :</b> ${net.toFixed(2)} h
+`
 
 // --- LOGIQUE DE CLÔTURE ANNUELLE ---
 const rateContainer = document.getElementById("rateContainer");
