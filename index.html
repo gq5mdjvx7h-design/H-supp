@@ -11,7 +11,24 @@ h1,h2{text-align:center}
 .calendar-wrapper{max-width:900px;margin:20px auto}
 .weekdays,.calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
 .weekday{text-align:center;font-weight:bold;background:#ddd;padding:8px 0;border-radius:6px}
-.day{background:#fff;padding:8px;border-radius:6px;cursor:pointer;text-align:center;min-height:70px}
+..day{
+  background:#fff;
+  padding:6px;
+  border-radius:6px;
+  cursor:pointer;
+  text-align:center;
+  height:80px;              /* 🔒 taille fixe */
+  box-sizing:border-box;
+  overflow:hidden;          /* empêche l’agrandissement */
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+}
+  .day small{
+  font-size:11px;
+  line-height:1.1;
+  white-space:nowrap;
+}
 .day.in-period{border:2px solid #2e7d32;background:#e8f5e9}
 .month-nav{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
 button,input,select,textarea{width:100%;padding:8px;margin:5px 0}
@@ -296,7 +313,11 @@ const dk=new Date(key)
 if(dk>=period.start && dk<=period.end){div.classList.add("in-period")}
 }
 const day=data[key]||{extra:0,recup:0}
-div.innerHTML=d+`<br>+${day.extra}h<br>- ${day.recup}h`
+div.innerHTML = `
+  <strong>${d}</strong>
+  <small>+${day.extra}h</small>
+  <small>- ${day.recup}h</small>
+`
 if(key===new Date().toISOString().slice(0,10))div.classList.add("today")
 div.onclick=()=>openPopup(key)
 calendar.appendChild(div)
