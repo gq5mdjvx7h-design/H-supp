@@ -163,27 +163,6 @@ button,input,select,textarea{width:100%;padding:8px;margin:5px 0}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
 
-function autoSwitchPeriodAtMidnight(){
-  const now = new Date()
-
-  // ⏱️ ms jusqu’à minuit
-  const nextMidnight = new Date(
-    now.getFullYear(),
-    now.getMonth(),
-    now.getDate() + 1,
-    0, 0, 0, 0
-  )
-
-  const delay = nextMidnight - now
-
-  setTimeout(() => {
-    buildPeriods()
-    update()
-    showToast()           // 🕛 message discret
-    autoSwitchPeriodAtMidnight() // 🔁 nuit suivante
-  }, delay)
-}
-
 // ===== MULTI-ANNÉE =====
 let currentSuffix = localStorage.getItem("ACTIVE_YEAR_SUFFIX") || new Date().getFullYear();
 document.getElementById("activeYearLabel").textContent = currentSuffix;
@@ -267,60 +246,6 @@ yearSelect.appendChild(o)
 }
 }
 
-function openClosures(){
-const box=document.getElementById("closuresInputs")
-box.innerHTML=""
-for(let i=0;i<12;i++){
-const input=document.createElement("input")
-input.type="date"
-input.value=closures[i]||""
-box.appendChild(input)
-}
-document.getElementById("popupClosures").style.display="flex"
-}
-
-function closeClosures(){document.getElementById("popupClosures").style.display="none"}
-
-function saveClosures(){
-const inputs=[...document.querySelectorAll("#closuresInputs input")]
-closures=inputs.map(i=>i.value).filter(v=>v).sort()
-localStorage.setItem(STORAGE.closures,JSON.stringify(closures))
-buildPeriods()
-closeClosures()
-}
-
-function buildPeriods(){
-  periodSelect.innerHTML = ""
-  let start = getBaseStartDate()
-
-  closures.forEach((c, i) => {
-    const end = new Date(c)
-    const opt = document.createElement("option")
-    opt.value = i
-    opt.textContent = `${start.toLocaleDateString()} → ${end.toLocaleDateString()}`
-    periodSelect.appendChild(opt)
-
-    start = new Date(c)
-    start.setDate(start.getDate() + 1)
-  })
-
-  const opt = document.createElement("option")
-  opt.value = closures.length
-  opt.textContent = `${start.toLocaleDateString()} → en cours`
-  periodSelect.appendChild(opt)
-
-  currentPeriodIndex = periodSelect.options.length - 1
-  periodSelect.selectedIndex = currentPeriodIndex
-  update()
-}
-
-function toggleLock(){
-  const i=currentPeriodIndex
-  locks[i]=!locks[i]
-  localStorage.setItem(STORAGE.locks,JSON.stringify(locks))
-  update()
-}
-
 function getCurrentPeriod(){
   let start = getBaseStartDate()
 
@@ -341,7 +266,6 @@ const firstDay = new Date(viewYear, viewMonth, 1).getDay()
 const offset = firstDay === 0 ? 6 : firstDay - 1
 const days=new Date(viewYear,viewMonth+1,0).getDate()
 for(let i=0;i<offset;i++)calendar.appendChild(document.createElement("div"))
-const period=getCurrentPeriod()
 for(let d=1;d<=days;d++){
 const key=`${viewYear}-${String(viewMonth+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`
 const div=document.createElement("div")
