@@ -216,11 +216,8 @@ const ALLOW_RECUP_FREE = true;
 const months=["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"]
 const monthSelect=document.getElementById("monthSelect")
 const yearSelect=document.getElementById("yearSelect")
-const periodSelect=document.getElementById("periodSelect")
 const calendar=document.getElementById("calendar")
-const periodInfo=document.getElementById("periodInfo")
 const totaux=document.getElementById("totaux")
-const lockInfo = document.getElementById("lockInfo")
 const popup = document.getElementById("popup")
 const popupDate = document.getElementById("popupDate")
 const manualExtra = document.getElementById("manualExtra")
@@ -236,7 +233,7 @@ let view=new Date()
 let viewMonth=view.getMonth()
 let viewYear=view.getFullYear()
 let selectedDate=""
-let currentPeriodIndex=0
+
 // 🔒 Clé de date locale (évite les bugs UTC / changement d’année)
 function dateKeyLocal(d){
   const y = d.getFullYear()
@@ -679,13 +676,8 @@ exerciseStartInput.value = exerciseStart;
 exerciseStartInput.onchange = ()=>{
   exerciseStart = exerciseStartInput.value;
   localStorage.setItem(STORAGE.exerciseStart, exerciseStart);
-  buildPeriods();
-};
-
-initSelectors()
-buildPeriods()
-autoSwitchPeriodAtMidnight()
-
+  
+  
   // ===== FONCTION DE VÉRIFICATION DU MOIS EXACT =====
 function exportMonthlyPDF(){
   const { jsPDF } = window.jspdf
