@@ -353,6 +353,7 @@ rateContainer.innerHTML = "";
 // --- CALCUL ABSENCES ANNÉE ---
 let annualAbsHours = 0
 let annualAbsDays = 0
+const annualLimit = new Date(annualDate)
 
 Object.entries(data).forEach(([date, v])=>{
   const d = new Date(date)
