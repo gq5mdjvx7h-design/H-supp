@@ -593,9 +593,11 @@ async function importFeries(){
       if(!specialDays[date]){
         specialDays[date] = "ferie"
       }
-
-      if(!data[date]) data[date] = { extra:0, recup:0, absent:0 }
-      data[date].absent = 7
+      // créer le jour seulement s’il n’existe pas
+if(!data[date]){
+  data[date] = { extra:0, recup:0, absent:7 }
+}
+// sinon : ON NE TOUCHE À RIEN
     })
 
     localStorage.setItem(STORAGE.specialDays, JSON.stringify(specialDays))
