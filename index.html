@@ -403,33 +403,26 @@ let annualAbsDays = 0
 let annualFerieDays = 0
 let annualFerieHours = 0
 const annualLimit = new Date(annualDate)
+Object.entries(data).forEach(([date, v]) => {
+  const d = new Date(date)
 
-  
-Object.keys(feries).forEach(date => {
+  // seulement jusqu’à la clôture annuelle
+  if(d >= period.start && d <= annualLimit){
 
-  // 🎌 Marque toujours comme férié (couleur / label)
-  specialDays[date] = "ferie"
-
-  // 📅 Si la journée n’existe pas encore → férié chômé par défaut
-   Object.keys(feries).forEach(date => {
-
-  // 🎌 Marque toujours comme férié (couleur / label)
-  specialDays[date] = "ferie"
-
-  // 📅 Si le jour n’existe pas → férié chômé par défaut
-  if(!data[date]){
-    data[date] = { extra:0, recup:0, absent:7 }
+    const abs = v.absent || 0
+    if(abs > 0){
+      if(specialDays[date] === "ferie"){
+        // 🎌 férié chômé
+        annualFerieDays++
+        annualFerieHours += abs
+      }else{
+        // ❌ absence classique
+        annualAbsHours += abs
+        if(abs >= 7) annualAbsDays++
+      }
+    }
   }
-
-  // ✋ S’il existe déjà :
-  // ➜ on NE TOUCHE PAS à absent (respect travail manuel)
-})   return
-  }
-
-  // ✋ Si elle existe déjà :
-  // ➜ on NE TOUCHE PAS à absent (respect modification manuelle)
 })
-  
 if(shouldShowAnnualClosure(period)){
   rateContainer.innerHTML = `
     <div style="background:#fff3e0;padding:10px;border-radius:6px;border:1px solid #ff9800;margin-top:10px;">
