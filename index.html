@@ -633,7 +633,14 @@ Object.entries(weeks).forEach(([week, extra]) => {
     Object.entries(data).forEach(([date, v]) => {
       const parts = date.split('-');
       const d = new Date(parts[0], parts[1]-1, parts[2]);
-      if (limit && d <= limit) {
+      const dayOfWeek = d.getDay(); // 0 = dim, 6 = sam
+
+if (
+  limit &&
+  d <= limit &&
+  dayOfWeek !== 0 &&
+  dayOfWeek !== 6
+) {
         const abs = v.absent || 0;
         if(abs > 0){
           if(specialDays[date] === "ferie"){
