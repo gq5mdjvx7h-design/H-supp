@@ -565,12 +565,7 @@ Object.entries(weeks).forEach(([week, extra]) => {
   );
 });
     
-    // ✅ CORRECTION IMAGE 3 : Affichage sans bug UTC pour la date de semaine
-    const [y, m, d] = week.split("-");
-    const weekDate = new Date(y, m - 1, d);
-    
-    details.push(`Semaine du ${weekDate.toLocaleDateString()} : Base ${Math.max(0, 35-absent)}h (Abs ${absent}h) → ${w25}h à 25% / ${w50}h à 50%`);
-  });
+    // ✅ CORRECTION IMAGE 3 : Affichage sans bug UTC pour la date de 
 
   const brut25 = h25 * 1.25;
   const brut50 = h50 * 1.5;
