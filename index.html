@@ -259,14 +259,13 @@ function dateKeyLocal(d){
   const day = String(d.getDate()).padStart(2, "0")
   return `${y}-${m}-${day}`
 }
-
 function getBaseStartDate(){
   if(!exerciseStart){
-    alert("⚠️ Merci de définir la date de début d’exercice");
-    throw new Error("Exercise start not defined");
+    return null;
   }
   return new Date(exerciseStart);
 }
+
 
 function initSelectors(){
 monthSelect.innerHTML=""
@@ -308,8 +307,13 @@ closeClosures()
 }
 
 function buildPeriods(){
-  periodSelect.innerHTML = ""
-  let start = getBaseStartDate()
+  const base = getBaseStartDate();
+  if(!base) return;
+
+  periodSelect.innerHTML = "";
+  let start = base;
+  ...
+}
 
   closures.forEach((c, i) => {
     const end = new Date(c)
