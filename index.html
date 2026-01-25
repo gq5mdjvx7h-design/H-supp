@@ -529,18 +529,41 @@ Object.entries(data).forEach(([k, v]) => {
   }
 })
 
-  // --- 2. CALCUL DES MAJORATIONS (TA LOGIQUE OPTIMISÉE IMAGE 2) ---
-  Object.entries(weeks).forEach(([week, extra]) => {
-    const absent = absences[week] || 0;
-    
-    // Logique de ton Image 2 : calcul précis des tranches
-    const total = Math.max(0, 35 - absent) + extra;
-    const sup = Math.max(0, total - 35);
-    const w25 = Math.min(sup, 8);
-    const w50 = Math.max(0, sup - 8);
+  // --- 2. CALCUL DES MAJORATIONS (RÈGLE DÉFINITIVE) ---
+Object.entries(weeks).forEach(([week, extra]) => {
+  const absent = absences[week] || 0;
 
-    h25 += w25; 
-    h50 += w50;
+  // Heures réellement travaillées sur la semaine
+  const base = Math.max(0, 35 - absent);
+  const total = base + extra;
+
+  let w25 = 0;
+  let w50 = 0;
+
+  // 🔹 25 % : dès qu'on dépasse 35h jusqu'à 43h inclus
+  if (total > 35) {
+    w25 = Math.min(total, 43) - 35;
+  }
+
+  // 🔹 50 % : dès qu'on dépasse 43h
+  if (total > 43) {
+    w50 = total - 43;
+  }
+
+  // Sécurisation
+  w25 = Math.max(0, w25);
+  w50 = Math.max(0, w50);
+
+  h25 += w25;
+  h50 += w50;
+
+  // (optionnel) détail affichage
+  const [y, m, d] = week.split("-");
+  const weekDate = new Date(y, m - 1, d);
+  details.push(
+    `Semaine du ${weekDate.toLocaleDateString()} : ${w25.toFixed(2)}h à 25% / ${w50.toFixed(2)}h à 50%`
+  );
+});
     
     // ✅ CORRECTION IMAGE 3 : Affichage sans bug UTC pour la date de semaine
     const [y, m, d] = week.split("-");
