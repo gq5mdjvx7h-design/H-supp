@@ -526,7 +526,7 @@ Object.entries(data).forEach(([k, v]) => {
   const parts = k.split('-')
   const d = new Date(parts[0], parts[1] - 1, parts[2])
 
-  if (limit && d <= limit) {
+  if (d >= period.start && d <= period.end) {
     const day = d.getDay() || 7
     const monday = new Date(d)
     if (day !== 1) monday.setDate(monday.getDate() - (day - 1))
