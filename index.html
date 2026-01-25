@@ -171,7 +171,7 @@ button,input,select,textarea{width:100%;padding:8px;margin:5px 0}
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
-
+let midnightTimer = null
 function autoSwitchPeriodAtMidnight(){
   const now = new Date()
 
@@ -512,20 +512,22 @@ function calculate(){
   periodInfo.innerHTML=`<b>Période :</b> ${period.start.toLocaleDateString()} → ${period.end.getFullYear()===2099?"en cours":period.end.toLocaleDateString()}<br>
   <b>Report précédent :</b> ${reportPrev.toFixed(2)} h`
 
-  // --- 1. TRAITEMENT DES DONNÉES (SÉCURISÉ) ---
-  Object.entries(data).forEach(([date, v])=>{
-  const [y,m,da] = date.split("-")
-  const d = new Date(y, m-1, da)
+// --- 1. TRAITEMENT DES DONNÉES (HEBDOMADAIRE) ---
+Object.entries(data).forEach(([k, v]) => {
+  const parts = k.split('-')
+  const d = new Date(parts[0], parts[1] - 1, parts[2])
 
-  if(
-    d.getFullYear() === viewYear &&
-    d.getMonth() === viewMonth
-  ){
-    totalExtra += v.extra || 0
+  if (d >= period.start && d <= period.end) {
+    const day = d.getDay() || 7
+    const monday = new Date(d)
+    if (day !== 1) monday.setDate(monday.getDate() - (day - 1))
+
+    const key = dateKeyLocal(monday)
+    weeks[key] = (weeks[key] || 0) + (v.extra || 0)
+    absences[key] = (absences[key] || 0) + (v.absent || 0)
     totalRecup += v.recup || 0
-    totalAbs += v.absent || 0
   }
-});
+})
 
   // --- 2. CALCUL DES MAJORATIONS (TA LOGIQUE OPTIMISÉE IMAGE 2) ---
   Object.entries(weeks).forEach(([week, extra]) => {
