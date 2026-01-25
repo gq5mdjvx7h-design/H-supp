@@ -767,35 +767,45 @@ a.click()
 localStorage.setItem(key,now)
 }
 async function importFeries(){
-  const year = currentSuffix
+  const baseYear = Number(currentSuffix);
+  const years = [baseYear - 1, baseYear, baseYear + 1];
 
-  if(!confirm("Importer les jours fériés officiels pour " + year + " ?")) return
+  if(!confirm(
+    `Importer les jours fériés officiels pour ${years.join(", ")} ?`
+  )) return;
 
   try{
-    const res = await fetch(
-      `https://calendrier.api.gouv.fr/jours-feries/metropole/${year}.json`
-    )
-    const feries = await res.json()
+    for(const year of years){
+      const res = await fetch(
+        `https://calendrier.api.gouv.fr/jours-feries/metropole/${year}.json`
+      );
+      const feries = await res.json();
 
-    Object.keys(feries).forEach(date=>{
-      // ne pas écraser une valeur existante
-      if(!specialDays[date]){
-        specialDays[date] = "ferie"
-      }
-      // créer le jour seulement s’il n’existe pas
-if(!data[date]){
-  data[date] = { extra:0, recup:0, absent:7 }
-}
-// sinon : ON NE TOUCHE À RIEN
-    })
+      Object.keys(feries).forEach(date=>{
+        // marquer comme férié (sans écraser)
+        if(!specialDays[date]){
+          specialDays[date] = "ferie";
+        }
 
-    localStorage.setItem(STORAGE.specialDays, JSON.stringify(specialDays))
-    localStorage.setItem(STORAGE.data, JSON.stringify(data))
+        // 🔒 ne créer une absence QUE si jour ouvré
+        const d = new Date(date);
+        const day = d.getDay(); // 0 dim, 6 sam
 
-    update()
-    alert("✅ Jours fériés importés")
+        if(day !== 0 && day !== 6){
+          if(!data[date]){
+            data[date] = { extra:0, recup:0, absent:7 };
+          }
+        }
+      });
+    }
+
+    localStorage.setItem(STORAGE.specialDays, JSON.stringify(specialDays));
+    localStorage.setItem(STORAGE.data, JSON.stringify(data));
+
+    update();
+    alert("✅ Jours fériés importés (N-1 / N / N+1)");
   }catch(e){
-    alert("❌ Impossible d’importer les jours fériés")
+    alert("❌ Impossible d’importer les jours fériés");
   }
 }
 function update(){
