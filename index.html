@@ -608,7 +608,7 @@ Object.entries(weeks).forEach(([week, extra]) => {
   const rateContainer = document.getElementById("rateContainer");
   rateContainer.innerHTML = "";
 
-  if(shouldShowAnnualClosure(period)){
+  if (shouldShowAnnualClosure()) {
     rateContainer.innerHTML = `
       <div style="background:#fff3e0;padding:10px;border-radius:6px;border:1px solid #ff9800;margin-top:10px;">
         <label><b>Taux horaire (€)</b></label>
@@ -868,10 +868,12 @@ function exportMonthlyPDF(){
 
   pdf.save(`heures_sup_${monthName}_${viewYear}.pdf`)
 }
-  function shouldShowAnnualClosure(period){
-  if(!annualDate) return false;
+function shouldShowAnnualClosure() {
+  if (!annualDate) return false;
+
   const ad = new Date(annualDate);
-  if(ad < period.start || ad > period.end) return false;
+
+  // afficher uniquement sur le mois de la clôture annuelle
   return (
     ad.getFullYear() === viewYear &&
     ad.getMonth() === viewMonth
