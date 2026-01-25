@@ -222,7 +222,7 @@ let closures = JSON.parse(localStorage.getItem(STORAGE.closures)) || [];
 let reports = JSON.parse(localStorage.getItem(STORAGE.reports)) || {};
 let locks = JSON.parse(localStorage.getItem(STORAGE.locks)) || {};
 let annualDate = localStorage.getItem(STORAGE.annualDate) || "";
-let annualRate = 10;
+let annualRate = Number(localStorage.getItem("ANNUAL_RATE")) || 10;
 let specialDays = JSON.parse(localStorage.getItem(STORAGE.specialDays)) || {};
 let exerciseStart = localStorage.getItem(STORAGE.exerciseStart) || "";
 
