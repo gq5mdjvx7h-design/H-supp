@@ -352,15 +352,27 @@ document.getElementById("popupClosures").style.display="flex"
 
 function closeClosures(){document.getElementById("popupClosures").style.display="none"}
 
-const inputs=[...document.querySelectorAll("#closuresInputs input")]
-closures=inputs.map(i=>i.value).filter(v=>v).sort()
-localStorage.setItem(STORAGE.closures,JSON.stringify(closures))
-buildPeriods()
-closeClosures()
-closures.forEach((_, i) => {
-  if(reports[i] !== undefined){
-    periodMeta[i] = { status: "modified" }
-  }
+function saveClosures(){
+  const inputs = [...document.querySelectorAll("#closuresInputs input")]
+
+  closures = inputs
+    .map(i => i.value)
+    .filter(v => v)
+    .sort()
+
+  localStorage.setItem(STORAGE.closures, JSON.stringify(closures))
+
+  closures.forEach((_, i) => {
+    if(reports[i] !== undefined){
+      periodMeta[i] = { status: "modified" }
+    }
+  })
+
+  localStorage.setItem(STORAGE.periodMeta, JSON.stringify(periodMeta))
+
+  buildPeriods()
+  closeClosures()
+}
 })
 function deletePeriod(i){
   if(!confirm("❌ Supprimer cette période ? Elle sera ignorée mais conservée.")) return;
