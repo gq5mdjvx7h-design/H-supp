@@ -533,8 +533,14 @@ Object.entries(data).forEach(([k, v]) => {
 
     const key = dateKeyLocal(monday)
     weeks[key] = (weeks[key] || 0) + (v.extra || 0)
-    absences[key] = (absences[key] || 0) + (v.absent || 0)
-    totalRecup += v.recup || 0
+
+// 🔒 Absence uniquement si jour ouvré
+const dayOfWeek = d.getDay(); // 0 = dim, 6 = sam
+if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+  absences[key] = (absences[key] || 0) + (v.absent || 0);
+}
+
+totalRecup += v.recup || 0;
   }
 })
 
