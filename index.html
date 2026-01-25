@@ -257,6 +257,8 @@ function getExistingYears(){
   return Array.from(years).sort()
 }
 // ===== STOCKAGE DYNAMIQUE =====
+STORAGE.periodMeta = "PERIOD_META_REPORT_" + currentSuffix
+
 const STORAGE = {
   data: "DATA_REPORT_" + currentSuffix,
   closures: "CLOSURES_REPORT_" + currentSuffix,
@@ -276,6 +278,7 @@ let annualDate = localStorage.getItem(STORAGE.annualDate) || "";
 let annualRate = Number(localStorage.getItem("ANNUAL_RATE")) || 10;
 let specialDays = JSON.parse(localStorage.getItem(STORAGE.specialDays)) || {};
 let exerciseStart = localStorage.getItem(STORAGE.exerciseStart) || "";
+let periodMeta = JSON.parse(localStorage.getItem(STORAGE.periodMeta)) || {}
 
 // OPTION : autoriser la récup même sans heures sup le même jour
 const ALLOW_RECUP_FREE = true;
@@ -355,6 +358,19 @@ closures=inputs.map(i=>i.value).filter(v=>v).sort()
 localStorage.setItem(STORAGE.closures,JSON.stringify(closures))
 buildPeriods()
 closeClosures()
+closures.forEach((_, i) => {
+  if(reports[i] !== undefined){
+    periodMeta[i] = { status: "modified" }
+  }
+  function deletePeriod(i){
+  if(!confirm("Supprimer cette période ? Elle sera ignorée mais conservée en historique.")) return
+  periodMeta[i] = { status: "deleted" }
+  localStorage.setItem(STORAGE.periodMeta, JSON.stringify(periodMeta))
+  update()
+}
+})
+
+localStorage.setItem(STORAGE.periodMeta, JSON.stringify(periodMeta))
 }
 function buildPeriods(){
   const base = getBaseStartDate();
@@ -364,15 +380,24 @@ function buildPeriods(){
   let start = base;
 
   closures.forEach((c, i) => {
-    const end = new Date(c);
-    const opt = document.createElement("option");
-    opt.value = i;
-    opt.textContent = `${start.toLocaleDateString()} → ${end.toLocaleDateString()}`;
-    periodSelect.appendChild(opt);
+  if(!periodMeta[i]){
+    periodMeta[i] = { status: "active" }
+  }
 
-    start = new Date(c);
-    start.setDate(start.getDate() + 1);
-  });
+  const end = new Date(c)
+  const opt = document.createElement("option")
+
+  let label = `${start.toLocaleDateString()} → ${end.toLocaleDateString()}`
+  if(periodMeta[i].status === "modified") label += " ⚠️ modifiée"
+  if(periodMeta[i].status === "deleted") label += " ❌ supprimée"
+
+  opt.value = i
+  opt.textContent = label
+  periodSelect.appendChild(opt)
+
+  start = new Date(c)
+  start.setDate(start.getDate() + 1)
+})
 
   const opt = document.createElement("option");
   opt.value = closures.length;
@@ -385,7 +410,7 @@ function buildPeriods(){
   update();
 }
 
-  
+localStorage.setItem(STORAGE.periodMeta, JSON.stringify(periodMeta))
 
 function toggleLock(){
   const i=currentPeriodIndex
@@ -463,7 +488,10 @@ function calculate(){
   let h50 = 0
 
   const period = getCurrentPeriod()
-  if(!period){ totaux.innerHTML=""; periodInfo.innerHTML=""; return }
+  if(periodMeta[period.index]?.status === "deleted"){
+  totaux.innerHTML = "<i>❌ Cette période est supprimée</i>"
+  return
+}
 
   // ✅ CORRECTION IMAGE 4 : Sécurisation du reportPrev contre les valeurs NaN ou vides
   const reportPrev = Number(reports[period.index - 1]) || 0;
