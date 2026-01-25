@@ -175,7 +175,6 @@ button,input,select,textarea{width:100%;padding:8px;margin:5px 0}
 function autoSwitchPeriodAtMidnight(){
   const now = new Date()
 
-  // ⏱️ ms jusqu’à minuit
   const nextMidnight = new Date(
     now.getFullYear(),
     now.getMonth(),
@@ -185,11 +184,16 @@ function autoSwitchPeriodAtMidnight(){
 
   const delay = nextMidnight - now
 
-  setTimeout(() => {
+  // 🔒 Sécurisation : un seul timer actif
+  if(midnightTimer){
+    clearTimeout(midnightTimer)
+  }
+
+  midnightTimer = setTimeout(() => {
     buildPeriods()
     update()
-    showToast()           // 🕛 message discret
-    autoSwitchPeriodAtMidnight() // 🔁 nuit suivante
+    showToast()
+    autoSwitchPeriodAtMidnight() // relance pour la nuit suivante
   }, delay)
 }
 
@@ -509,21 +513,19 @@ function calculate(){
   <b>Report précédent :</b> ${reportPrev.toFixed(2)} h`
 
   // --- 1. TRAITEMENT DES DONNÉES (SÉCURISÉ) ---
-  Object.entries(data).forEach(([k, v]) => {
-    const parts = k.split('-');
-    const d = new Date(parts[0], parts[1] - 1, parts[2]); 
+  Object.entries(data).forEach(([date, v])=>{
+  const [y,m,da] = date.split("-")
+  const d = new Date(y, m-1, da)
 
-    if (d >= period.start && d <= period.end) {
-      const day = d.getDay() || 7;
-      const mondayCopy = new Date(d);
-      if (day !== 1) mondayCopy.setDate(mondayCopy.getDate() - (day - 1));
-      
-      const key = dateKeyLocal(mondayCopy);
-      weeks[key] = (weeks[key] || 0) + v.extra;
-      absences[key] = (absences[key] || 0) + (v.absent || 0);
-      totalRecup += v.recup || 0;
-    }
-  });
+  if(
+    d.getFullYear() === viewYear &&
+    d.getMonth() === viewMonth
+  ){
+    totalExtra += v.extra || 0
+    totalRecup += v.recup || 0
+    totalAbs += v.absent || 0
+  }
+});
 
   // --- 2. CALCUL DES MAJORATIONS (TA LOGIQUE OPTIMISÉE IMAGE 2) ---
   Object.entries(weeks).forEach(([week, extra]) => {
