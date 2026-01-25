@@ -352,7 +352,6 @@ document.getElementById("popupClosures").style.display="flex"
 
 function closeClosures(){document.getElementById("popupClosures").style.display="none"}
 
-function saveClosures(){
 const inputs=[...document.querySelectorAll("#closuresInputs input")]
 closures=inputs.map(i=>i.value).filter(v=>v).sort()
 localStorage.setItem(STORAGE.closures,JSON.stringify(closures))
@@ -362,15 +361,13 @@ closures.forEach((_, i) => {
   if(reports[i] !== undefined){
     periodMeta[i] = { status: "modified" }
   }
-  function deletePeriod(i){
-  if(!confirm("Supprimer cette période ? Elle sera ignorée mais conservée en historique.")) return
+})
+function deletePeriod(i){
+  if(!confirm("❌ Supprimer cette période ? Elle sera ignorée mais conservée.")) return;
+
   periodMeta[i] = { status: "deleted" }
   localStorage.setItem(STORAGE.periodMeta, JSON.stringify(periodMeta))
   update()
-}
-})
-
-localStorage.setItem(STORAGE.periodMeta, JSON.stringify(periodMeta))
 }
 function buildPeriods(){
   const base = getBaseStartDate();
