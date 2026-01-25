@@ -305,14 +305,33 @@ localStorage.setItem(STORAGE.closures,JSON.stringify(closures))
 buildPeriods()
 closeClosures()
 }
-
 function buildPeriods(){
   const base = getBaseStartDate();
   if(!base) return;
 
   periodSelect.innerHTML = "";
   let start = base;
-  ...
+
+  closures.forEach((c, i) => {
+    const end = new Date(c);
+    const opt = document.createElement("option");
+    opt.value = i;
+    opt.textContent = `${start.toLocaleDateString()} → ${end.toLocaleDateString()}`;
+    periodSelect.appendChild(opt);
+
+    start = new Date(c);
+    start.setDate(start.getDate() + 1);
+  });
+
+  const opt = document.createElement("option");
+  opt.value = closures.length;
+  opt.textContent = `${start.toLocaleDateString()} → en cours`;
+  periodSelect.appendChild(opt);
+
+  currentPeriodIndex = periodSelect.options.length - 1;
+  periodSelect.selectedIndex = currentPeriodIndex;
+
+  update();
 }
 
   closures.forEach((c, i) => {
