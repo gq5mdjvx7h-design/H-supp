@@ -257,8 +257,6 @@ function getExistingYears(){
   return Array.from(years).sort()
 }
 // ===== STOCKAGE DYNAMIQUE =====
-STORAGE.periodMeta = "PERIOD_META_REPORT_" + currentSuffix
-
 const STORAGE = {
   data: "DATA_REPORT_" + currentSuffix,
   closures: "CLOSURES_REPORT_" + currentSuffix,
@@ -268,6 +266,8 @@ const STORAGE = {
   specialDays: "SPECIAL_DAYS_" + currentSuffix,
   exerciseStart: "EXERCISE_START_" + currentSuffix
 };
+
+STORAGE.periodMeta = "PERIOD_META_REPORT_" + currentSuffix;
 
 // ===== DONNÉES =====
 let data = JSON.parse(localStorage.getItem(STORAGE.data)) || {};
