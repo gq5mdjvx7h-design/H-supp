@@ -107,7 +107,13 @@ button,input,select,textarea{width:100%;padding:8px;margin:5px 0}
     <hr>
     <h2>Jours fériés</h2>
     <button onclick="importFeries()">🇫🇷 Importer les jours fériés officiels</button>
-
+<hr>
+<button
+  onclick="resetCurrentExercise()"
+  style="background:#ffcdd2;color:#b71c1c;font-weight:bold"
+>
+  ♻️ Réinitialiser l’exercice en cours
+</button>
   </div>
 </details>
 
@@ -201,6 +207,31 @@ function autoSwitchPeriodAtMidnight(){
 let currentSuffix = localStorage.getItem("ACTIVE_YEAR_SUFFIX") || new Date().getFullYear();
 document.getElementById("activeYearLabel").textContent = currentSuffix;
 
+function resetCurrentExercise(){
+  if(!confirm("⚠️ Réinitialiser complètement l’exercice " + currentSuffix + " ?\n\nToutes les données seront supprimées.")) {
+    return;
+  }
+
+  const suffix = currentSuffix;
+
+  const keys = [
+    "DATA_REPORT_",
+    "CLOSURES_REPORT_",
+    "REPORTS_REPORT_",
+    "LOCKS_REPORT_",
+    "PERIOD_META_REPORT_",
+    "ANNUAL_DATE_",
+    "SPECIAL_DAYS_",
+    "EXERCISE_START_"
+  ];
+
+  keys.forEach(prefix => {
+    localStorage.removeItem(prefix + suffix);
+  });
+
+  alert("✅ Exercice " + suffix + " remis à zéro");
+  location.reload();
+}
 function switchYear(){
   openYearsPopup()
 }
