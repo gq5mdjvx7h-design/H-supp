@@ -627,7 +627,7 @@ Object.entries(weeks).forEach(([week, extra]) => {
     Object.entries(data).forEach(([date, v]) => {
       const parts = date.split('-');
       const d = new Date(parts[0], parts[1]-1, parts[2]);
-      if(d >= period.start && limit && d <= limit){
+      if (limit && d <= limit) {
         const abs = v.absent || 0;
         if(abs > 0){
           if(specialDays[date] === "ferie"){
