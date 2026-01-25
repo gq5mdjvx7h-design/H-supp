@@ -230,6 +230,16 @@ function closeYearsPopup(){
 function confirmSwitchYear(){
   const val = document.getElementById("newYearInput").value
   if(!val) return
+
+  // 🔹 Initialisation minimale si l'exercice n'existe pas
+  const baseKey = "DATA_REPORT_" + val
+  if(!localStorage.getItem(baseKey)){
+    localStorage.setItem(baseKey, JSON.stringify({}))
+    localStorage.setItem("CLOSURES_REPORT_" + val, JSON.stringify([]))
+    localStorage.setItem("REPORTS_REPORT_" + val, JSON.stringify({}))
+    localStorage.setItem("LOCKS_REPORT_" + val, JSON.stringify({}))
+  }
+
   localStorage.setItem("ACTIVE_YEAR_SUFFIX", val)
   location.reload()
 }
