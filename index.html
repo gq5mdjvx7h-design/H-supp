@@ -408,153 +408,128 @@ function calculate(){
   let absences = {}
   let totalRecup = 0
   let details = []
-
   let h25 = 0
   let h50 = 0
 
-const period=getCurrentPeriod()
-if(!period){ totaux.innerHTML=""; periodInfo.innerHTML=""; return }
-const reportPrev = reports[period.index-1] || 0
-lockInfo.textContent = locks[period.index] ? "🔒 Période verrouillée" : "🔓 Période déverrouillée"
-periodInfo.innerHTML=`<b>Période :</b> ${period.start.toLocaleDateString()} → ${period.end.getFullYear()===2099?"en cours":period.end.toLocaleDateString()}<br>
-<b>Report précédent :</b> ${reportPrev.toFixed(2)} h`
-// REMPLACEMENT POINT 2
-Object.entries(data).forEach(([k, v]) => {
-  // On découpe la string "YYYY-MM-DD" pour éviter le bug UTC
-  const [y, m_str, d_str] = k.split('-').map(Number);
-  const d = new Date(y, m_str - 1, d_str); // Création en heure locale pure
+  const period = getCurrentPeriod()
+  if(!period){ totaux.innerHTML=""; periodInfo.innerHTML=""; return }
 
-  if (d >= period.start && d <= period.end) {
-    const day = d.getDay() || 7;
-    // On crée une COPIE pour ne pas modifier l'original
-    const mondayCopy = new Date(d);
-    if (day !== 1) mondayCopy.setDate(mondayCopy.getDate() - (day - 1));
-    
-    const key = dateKeyLocal(mondayCopy);
-    weeks[key] = (weeks[key] || 0) + v.extra;
-    absences[key] = (absences[key] || 0) + (v.absent || 0);
-    totalRecup += v.recup || 0;
-  }
-});
+  // ✅ CORRECTION IMAGE 4 : Sécurisation du reportPrev
+  const reportPrev = Number(reports[period.index - 1]) || 0;
 
-const d=new Date(k)
-if(d>=period.start&&d<=period.end){
-const m=new Date(d); const day=m.getDay()||7
-if(day!==1)m.setDate(m.getDate()-(day-1))
-const key = dateKeyLocal(m)
-weeks[key]=(weeks[key]||0)+v.extra
-    absences[key]=(absences[key]||0)+(v.absent||0)
-totalRecup+=v.recup||0
-}
-})
+  lockInfo.textContent = locks[period.index] ? "🔒 Période verrouillée" : "🔓 Période déverrouillée"
+  periodInfo.innerHTML=`<b>Période :</b> ${period.start.toLocaleDateString()} → ${period.end.getFullYear()===2099?"en cours":period.end.toLocaleDateString()}<br>
+  <b>Report précédent :</b> ${reportPrev.toFixed(2)} h`
 
-Object.entries(weeks).forEach(([week,extra])=>{
-const absent = absences[week]||0
-    const base = Math.max(0,35-absent)
-    const total=base+extra
-let w25=0,w50=0
-if(total > 35) {
-  w25 = Math.min(total - 35, 8)
-}
+  // --- 1. TRAITEMENT DES DONNÉES ---
+  Object.entries(data).forEach(([k, v]) => {
+    const parts = k.split('-');
+    const d = new Date(parts[0], parts[1] - 1, parts[2]); 
 
-if(total > 43) {
-  w50 = total - 43
-}
-h25+=w25; h50+=w50
-details.push(`Semaine du ${new Date(week).toLocaleDateString()} : Base ${base}h (Abs ${absent}h) → ${w25}h à 25% / ${w50}h à 50%`)
-})
-const brut25 = h25*1.25
-const brut50 = h50*1.5
-const brut = brut25+brut50+reportPrev
-const net = brut-totalRecup
-if(!locks[period.index]){
-reports[period.index]=net
-localStorage.setItem(STORAGE.reports,JSON.stringify(reports))
-}
-totaux.innerHTML = `
-<details class="calc-details">
-  <summary>📊 Détails des calculs</summary>
-  <div class="breakdown">
-    ${details.join("<br>")}
-    <hr>
-    25% : ${h25}h × 1,25 = ${brut25.toFixed(2)} h<br>
-    50% : ${h50}h × 1,50 = ${brut50.toFixed(2)} h<br>
-    Report précédent : ${reportPrev.toFixed(2)} h
-  </div>
-</details>
-
-<hr>
-
-<b>Solde brut :</b> ${brut.toFixed(2)} h<br>
-Récup : ${totalRecup.toFixed(2)} h<br>
-<b>Solde net :</b> ${net.toFixed(2)} h
-`
-
-// --- LOGIQUE DE CLÔTURE ANNUELLE ---
-const rateContainer = document.getElementById("rateContainer");
-rateContainer.innerHTML = "";
-
-// --- CALCUL ABSENCES ANNÉE ---
-let annualAbsHours = 0
-let annualAbsDays = 0
-let annualFerieDays = 0
-let annualFerieHours = 0
-const annualLimit = annualDate ? new Date(annualDate) : null
-Object.entries(data).forEach(([date, v]) => {
-  const d = new Date(date)
-
-  // seulement jusqu’à la clôture annuelle
-  if(d >= period.start && annualLimit && d <= annualLimit){
-
-    const abs = v.absent || 0
-    if(abs > 0){
-      if(specialDays[date] === "ferie"){
-        // 🎌 férié chômé
-        annualFerieDays++
-        annualFerieHours += abs
-      }else{
-        // ❌ absence classique
-        annualAbsHours += abs
-        if(abs >= 7) annualAbsDays++
-      }
+    if (d >= period.start && d <= period.end) {
+      const day = d.getDay() || 7;
+      const mondayCopy = new Date(d);
+      if (day !== 1) mondayCopy.setDate(mondayCopy.getDate() - (day - 1));
+      
+      const key = dateKeyLocal(mondayCopy);
+      weeks[key] = (weeks[key] || 0) + v.extra;
+      absences[key] = (absences[key] || 0) + (v.absent || 0);
+      totalRecup += v.recup || 0;
     }
+  });
+
+  // --- 2. CALCUL (IMAGE 2) ET AFFICHAGE (IMAGE 3) ---
+  Object.entries(weeks).forEach(([week, extra]) => {
+    const absent = absences[week] || 0;
+    
+    // Logique optimisée de ton Image 2
+    const totalSemaine = Math.max(0, 35 - absent) + extra;
+    const sup = Math.max(0, totalSemaine - 35);
+    const w25 = Math.min(sup, 8);
+    const w50 = Math.max(0, sup - 8);
+
+    h25 += w25; 
+    h50 += w50;
+    
+    // ✅ CORRECTION IMAGE 3 : Affichage sans bug UTC
+    const [y_w, m_w, d_w] = week.split("-");
+    const weekDate = new Date(y_w, m_w - 1, d_w);
+    
+    details.push(`Semaine du ${weekDate.toLocaleDateString()} : Base ${Math.max(0, 35-absent)}h (Abs ${absent}h) → ${w25}h à 25% / ${w50}h à 50%`);
+  });
+
+  const brut25 = h25 * 1.25;
+  const brut50 = h50 * 1.5;
+  const brut = brut25 + brut50 + reportPrev;
+  const net = brut - totalRecup;
+
+  if(!locks[period.index]){
+    reports[period.index] = net;
+    localStorage.setItem(STORAGE.reports, JSON.stringify(reports));
   }
-})
-if(shouldShowAnnualClosure(period)){
-  rateContainer.innerHTML = `
-    <div style="background:#fff3e0;padding:10px;border-radius:6px;border:1px solid #ff9800;margin-top:10px;">
-      <label><b>Taux horaire pour cette clôture (€)</b></label>
-      <input type="number" id="hourlyRateInput" step="0.5"
-      value="${annualRate}"
-      oninput="annualRate = Number(this.value) || 10; calculate()">
-    </div>`;
 
-  const rate = annualRate || 10;
-  const paiement = net * rate;
-
-totaux.innerHTML += `
+  // --- 3. AFFICHAGE FINAL ---
+  totaux.innerHTML = `
+  <details class="calc-details">
+    <summary>📊 Détails des calculs</summary>
+    <div class="breakdown">
+      ${details.join("<br>")}
+      <hr>
+      25% : ${h25}h × 1,25 = ${brut25.toFixed(2)} h<br>
+      50% : ${h50}h × 1,50 = ${brut50.toFixed(2)} h<br>
+      Report précédent : ${reportPrev.toFixed(2)} h
+    </div>
+  </details>
   <hr>
-  <div style="background:#e8f5e9;padding:15px;border:2px solid #2e7d32;border-radius:8px;">
-    <h3 style="margin:0;color:#2e7d32;">🎯 Clôture Annuelle</h3>
+  <b>Solde brut :</b> ${brut.toFixed(2)} h<br>
+  Récup : ${totalRecup.toFixed(2)} h<br>
+  <b>Solde net :</b> ${net.toFixed(2)} h
+  `;
 
-    <b>Solde à liquider :</b> ${net.toFixed(2)} h<br>
-    <b>Paiement (${rate}€/h) :</b> ${paiement.toFixed(2)} €<br>
+  // --- 4. TAUX ET CLÔTURE (Toujours avec 10€ par défaut) ---
+  const rateContainer = document.getElementById("rateContainer");
+  rateContainer.innerHTML = "";
 
-    <hr>
+  if(shouldShowAnnualClosure(period)){
+    rateContainer.innerHTML = `
+      <div style="background:#fff3e0;padding:10px;border-radius:6px;border:1px solid #ff9800;margin-top:10px;">
+        <label><b>Taux horaire (€)</b></label>
+        <input type="number" id="hourlyRateInput" step="0.5"
+        value="${annualRate}"
+        oninput="annualRate = Number(this.value) || 10; localStorage.setItem('ANNUAL_RATE', annualRate); calculate()">
+      </div>`;
 
-<b>📌 Récapitulatif annuel (${currentSuffix})</b><br>
+    const rate = annualRate || 10;
+    const paiement = net * rate;
 
-❌ Absences :<br>
-• ${annualAbsDays} jour(s)<br>
-• ${annualAbsHours.toFixed(2)} h<br><br>
+    let annAbsH = 0, annAbsD = 0, annFerH = 0, annFerD = 0;
+    const limit = annualDate ? new Date(annualDate) : null;
+    
+    Object.entries(data).forEach(([date, v]) => {
+      const parts = date.split('-');
+      const d = new Date(parts[0], parts[1]-1, parts[2]);
+      if(d >= period.start && limit && d <= limit){
+        const abs = v.absent || 0;
+        if(abs > 0){
+          if(specialDays[date] === "ferie"){
+            annFerD++; annFerH += abs;
+          } else {
+            annAbsH += abs;
+            if(abs >= 7) annAbsD++;
+          }
+        }
+      }
+    });
 
-🎌 Jours fériés :<br>
-• ${annualFerieDays} jour(s)<br>
-• ${annualFerieHours.toFixed(2)} h
-  </div>`;
+    totaux.innerHTML += `
+      <hr>
+      <div style="background:#e8f5e9;padding:15px;border:2px solid #2e7d32;border-radius:8px;">
+        <h3 style="margin:0;color:#2e7d32;">🎯 Clôture Annuelle</h3>
+        <b>Paiement (${rate}€/h) :</b> ${paiement.toFixed(2)} €
+      </div>`;
+  }
 }
 
-}
 
 function openPopup(date){
   if(locks[currentPeriodIndex]){alert("🔒 Cette période est verrouillée");return}
