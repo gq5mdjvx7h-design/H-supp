@@ -390,35 +390,37 @@ function buildPeriods(){
   if(!base) return;
 
   periodSelect.innerHTML = "";
-  let start = base;
+
+  let start = new Date(base);
+  let today = new Date();
+  today.setHours(0,0,0,0);
+
+  let foundIndex = null;
 
   closures.forEach((c, i) => {
-  if(!periodMeta[i]){
-    periodMeta[i] = { status: "active" }
+    const end = new Date(c);
+    end.setHours(0,0,0,0);
+
+    const opt = document.createElement("option");
+    opt.value = i;
+    opt.textContent = `${start.toLocaleDateString()} → ${end.toLocaleDateString()}`;
+    periodSelect.appendChild(opt);
+
+    if (today >= start && today <= end) {
+      foundIndex = i;
+    }
+
+    start = new Date(end);
+    start.setDate(start.getDate() + 1);
+  });
+
+  // 👉 si aujourd’hui est après la dernière clôture
+  if (foundIndex === null) {
+    foundIndex = closures.length - 1;
   }
 
-  const end = new Date(c)
-  const opt = document.createElement("option")
-
-  let label = `${start.toLocaleDateString()} → ${end.toLocaleDateString()}`
-  if(periodMeta[i].status === "modified") label += " ⚠️ modifiée"
-  if(periodMeta[i].status === "deleted") label += " ❌ supprimée"
-
-  opt.value = i
-  opt.textContent = label
-  periodSelect.appendChild(opt)
-
-  start = new Date(c)
-  start.setDate(start.getDate() + 1)
-})
-
-  const opt = document.createElement("option");
-  opt.value = closures.length;
-  opt.textContent = `${start.toLocaleDateString()} → en cours`;
-  periodSelect.appendChild(opt);
-
-  currentPeriodIndex = periodSelect.options.length - 1;
-  periodSelect.selectedIndex = currentPeriodIndex;
+  currentPeriodIndex = foundIndex;
+  periodSelect.selectedIndex = foundIndex;
 
   update();
 }
