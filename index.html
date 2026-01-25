@@ -804,8 +804,15 @@ function update(){
   autoBackup();
 }
 
-monthSelect.onchange=()=>{viewMonth=+monthSelect.value;generateCalendar()}
-yearSelect.onchange=()=>{viewYear=+yearSelect.value;generateCalendar()}
+monthSelect.onchange = () => {
+  viewMonth = +monthSelect.value;
+  update(); // 🔥 recalcul complet (calendrier + soldes + clôture annuelle)
+};
+
+yearSelect.onchange = () => {
+  viewYear = +yearSelect.value;
+  update(); // 🔥 recalcul complet
+};
 periodSelect.onchange = () => {
   currentPeriodIndex = +periodSelect.value;
   update();
@@ -873,7 +880,6 @@ function shouldShowAnnualClosure() {
 
   const ad = new Date(annualDate);
 
-  // afficher uniquement sur le mois de la clôture annuelle
   return (
     ad.getFullYear() === viewYear &&
     ad.getMonth() === viewMonth
