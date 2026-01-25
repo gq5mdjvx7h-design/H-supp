@@ -418,7 +418,25 @@ const reportPrev = reports[period.index-1] || 0
 lockInfo.textContent = locks[period.index] ? "🔒 Période verrouillée" : "🔓 Période déverrouillée"
 periodInfo.innerHTML=`<b>Période :</b> ${period.start.toLocaleDateString()} → ${period.end.getFullYear()===2099?"en cours":period.end.toLocaleDateString()}<br>
 <b>Report précédent :</b> ${reportPrev.toFixed(2)} h`
-Object.entries(data).forEach(([k,v])=>{
+// REMPLACEMENT POINT 2
+Object.entries(data).forEach(([k, v]) => {
+  // On découpe la string "YYYY-MM-DD" pour éviter le bug UTC
+  const [y, m_str, d_str] = k.split('-').map(Number);
+  const d = new Date(y, m_str - 1, d_str); // Création en heure locale pure
+
+  if (d >= period.start && d <= period.end) {
+    const day = d.getDay() || 7;
+    // On crée une COPIE pour ne pas modifier l'original
+    const mondayCopy = new Date(d);
+    if (day !== 1) mondayCopy.setDate(mondayCopy.getDate() - (day - 1));
+    
+    const key = dateKeyLocal(mondayCopy);
+    weeks[key] = (weeks[key] || 0) + v.extra;
+    absences[key] = (absences[key] || 0) + (v.absent || 0);
+    totalRecup += v.recup || 0;
+  }
+});
+
 const d=new Date(k)
 if(d>=period.start&&d<=period.end){
 const m=new Date(d); const day=m.getDay()||7
