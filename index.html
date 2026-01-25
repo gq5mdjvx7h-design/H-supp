@@ -691,7 +691,11 @@ function update(){
 
 monthSelect.onchange=()=>{viewMonth=+monthSelect.value;generateCalendar()}
 yearSelect.onchange=()=>{viewYear=+yearSelect.value;generateCalendar()}
-periodSelect.onchange=()=>{currentPeriodIndex=+periodSelect.value;update()}
+periodSelect.onchange = () => {
+  currentPeriodIndex = +periodSelect.value;
+  update();
+  showToast();
+};
 
 
 const annualDateInput = document.getElementById("annualDateInput");
