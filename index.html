@@ -635,7 +635,7 @@ Object.entries(weeks).forEach(([week, extra]) => {
 // base juridique = heures réellement travaillables
 const base = Math.max(
   0,
-  BASE_HEBDO - absent - recup - ferieHours
+  BASE_HEBDO - absent - recup
 );
   const total = base + extra;
 
