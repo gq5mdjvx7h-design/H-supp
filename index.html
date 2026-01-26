@@ -604,12 +604,14 @@ if (d >= period.start && d <= period.end) {
 // 🎌 Jour férié chômé payé → NON travaillé (juridique)
 const dayOfWeek = d.getDay(); // 0 = dim, 6 = sam
 
+// 🎌 FÉRIÉ = absence automatique de 7h
 if (
   specialDays[k] === "ferie" &&
   dayOfWeek !== 0 &&
   dayOfWeek !== 6
 ) {
-  feries[key] = (feries[key] || 0) + DAILY_WORK_HOURS
+  v.absent = DAILY_WORK_HOURS; // 7h
+}
 }
   // ➕ Heures supplémentaires
   weeks[key] = (weeks[key] || 0) + (v.extra || 0)
