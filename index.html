@@ -446,9 +446,14 @@ function buildPeriods(){
   });
 
   // 👉 si aujourd’hui est après la dernière clôture
-  if (foundIndex === null) {
-    foundIndex = closures.length - 1;
-  }
+if (foundIndex === null) {
+  foundIndex = closures.length - 1;
+}
+
+// ✅ CORRECTIF : aucune clôture définie
+if (closures.length === 0) {
+  foundIndex = 0;
+}
 
   currentPeriodIndex = foundIndex;
   periodSelect.selectedIndex = foundIndex;
