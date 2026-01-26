@@ -322,7 +322,8 @@ let annualRate =
 let specialDays = JSON.parse(localStorage.getItem(STORAGE.specialDays)) || {};
 let exerciseStart = localStorage.getItem(STORAGE.exerciseStart) || "";
 let periodMeta = JSON.parse(localStorage.getItem(STORAGE.periodMeta)) || {}
-let BASE_HEBDO = Number(localStorage.getItem("BASE_HEBDO")) || 35;
+let BASE_HEBDO =
+  Number(localStorage.getItem("BASE_HEBDO_" + currentSuffix)) || 35;
 const DAILY_WORK_HOURS = 7; // base journalière légale
 // OPTION : autoriser la récup même sans heures sup le même jour
 const ALLOW_RECUP_FREE = true;
@@ -708,7 +709,9 @@ const base = Math.max(
         <label><b>Taux horaire (€)</b></label>
         <input type="number" id="hourlyRateInput" step="0.5"
         value="${annualRate}"
-        oninput="annualRate = Number(this.value) || 10; localStorage.setItem('ANNUAL_RATE', annualRate); calculate()">
+   oninput="annualRate = Number(this.value) || 10;
+localStorage.setItem('ANNUAL_RATE_' + currentSuffix, annualRate);
+calculate()"
       </div>`;
 
     const rate = annualRate || 10;
@@ -887,7 +890,7 @@ function loadJSON(text){
   specialDays = obj.specialDays || {}
 
   BASE_HEBDO = Number(obj.BASE_HEBDO) || 35
-  ANNUAL_RATE = Number(obj.ANNUAL_RATE) || 10
+  annualRate = Number(obj.annualRate) || 10
 
   // 🔐 stockage par exercice (important)
   localStorage.setItem(STORAGE.data, JSON.stringify(data))
