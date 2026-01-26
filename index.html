@@ -601,11 +601,15 @@ if (d >= period.start && d <= period.end) {
   // ➕ Heures supplémentaires
   weeks[key] = (weeks[key] || 0) + (v.extra || 0)
 
-  // ❌ Absences : uniquement jours ouvrés
-  const dayOfWeek = d.getDay() // 0 = dim, 6 = sam
-  if (dayOfWeek !== 0 && dayOfWeek !== 6) {
-    absences[key] = (absences[key] || 0) + (v.absent || 0)
-  }
+  // ❌ Absences : uniquement jours ouvrés NON fériés
+const dayOfWeek = d.getDay(); // 0 = dim, 6 = sam
+if (
+  dayOfWeek !== 0 &&
+  dayOfWeek !== 6 &&
+  specialDays[k] !== "ferie"
+) {
+  absences[key] = (absences[key] || 0) + (v.absent || 0)
+}
 
   // 🔁 Récupérations
   // ⚠️ IMPORTANT :
@@ -873,16 +877,6 @@ async function importFeries(){
         // marquer comme férié (sans écraser)
         if(!specialDays[date]){
           specialDays[date] = "ferie";
-        }
-
-        // 🔒 ne créer une absence QUE si jour ouvré
-        const d = new Date(date);
-        const day = d.getDay(); // 0 dim, 6 sam
-
-        if(day !== 0 && day !== 6){
-          if(!data[date]){
-            data[date] = { extra:0, recup:0, absent:7 };
-          }
         }
       });
     }
