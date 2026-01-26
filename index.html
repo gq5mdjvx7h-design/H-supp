@@ -592,10 +592,10 @@ if (d >= period.start && d <= period.end) {
   // --- 2. CALCUL DES MAJORATIONS (RÈGLE DÉFINITIVE) ---
 Object.entries(weeks).forEach(([week, extra]) => {
   const absent = absences[week] || 0;
-const base = Math.max(0, 35 - absent);
+  const recup = recups[week] || 0;
 
-  // Heures réellement travaillées sur la semaine
-  const base = Math.max(0, 35 - absent);
+  // Absence + récup = temps non travaillé
+  const base = Math.max(0, 35 - absent - recup);
   const total = base + extra;
 
   let w25 = 0;
