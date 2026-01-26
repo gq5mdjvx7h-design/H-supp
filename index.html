@@ -322,7 +322,7 @@ let specialDays = JSON.parse(localStorage.getItem(STORAGE.specialDays)) || {};
 let exerciseStart = localStorage.getItem(STORAGE.exerciseStart) || "";
 let periodMeta = JSON.parse(localStorage.getItem(STORAGE.periodMeta)) || {}
 let BASE_HEBDO = Number(localStorage.getItem("BASE_HEBDO")) || 35;
-
+const DAILY_WORK_HOURS = 7; // base journalière légale
 // OPTION : autoriser la récup même sans heures sup le même jour
 const ALLOW_RECUP_FREE = true;
 const months=["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"]
@@ -544,13 +544,15 @@ function getLastValidReport(index) {
   return 0;
 }
 function calculate(){
+
   let weeks = {}
-  let absences = {}
-  let totalRecup = 0
-  let recups = {}      // Heures de récupération par semaine (traitées comme absence)
-  let details = []
-  let h25 = 0
-  let h50 = 0
+let absences = {}
+let totalRecup = 0
+let recups = {}
+let feries = {} // ⬅️ ICI
+let details = []
+let h25 = 0
+let h50 = 0
 
   const period = getCurrentPeriod()
   if (!period) {
@@ -597,7 +599,16 @@ if (d >= period.start && d <= period.end) {
   if (day !== 1) monday.setDate(monday.getDate() - (day - 1))
 
   const key = dateKeyLocal(monday)
+// 🎌 Jour férié chômé payé → NON travaillé (juridique)
+const dayOfWeek = d.getDay(); // 0 = dim, 6 = sam
 
+if (
+  specialDays[k] === "ferie" &&
+  dayOfWeek !== 0 &&
+  dayOfWeek !== 6
+) {
+  feries[key] = (feries[key] || 0) + DAILY_WORK_HOURS
+}
   // ➕ Heures supplémentaires
   weeks[key] = (weeks[key] || 0) + (v.extra || 0)
 
@@ -627,8 +638,13 @@ Object.entries(weeks).forEach(([week, extra]) => {
   const absent = absences[week] || 0;
   const recup = recups[week] || 0;
 
-  // Absence + récup = temps non travaillé
-  const base = Math.max(0, BASE_HEBDO - absent - recup);
+  const ferieHours = feries[week] || 0;
+
+// base juridique = heures réellement travaillables
+const base = Math.max(
+  0,
+  BASE_HEBDO - absent - recup - ferieHours
+);
   const total = base + extra;
 
   let w25 = 0;
