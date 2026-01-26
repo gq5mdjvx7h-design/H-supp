@@ -516,16 +516,18 @@ if(day.recup){
   html += `<small style="color:#ef6c00">-${day.recup}h</small>`
 }
 
-if(day.absent){
-  if(specialDays[key] === "ferie"){
-    html += `<small style="color:#0d47a1;font-weight:bold">🎌 Férié</small>`
-    div.style.background = "#e3f2fd"
-    div.style.border = "2px dashed #1976d2"
-  }else{
-    html += `<small style="color:#c62828;font-weight:bold">ABS ${day.absent}h</small>`
-    div.style.background = "#ffebee"
-    div.style.border = "2px solid #c62828"
-  }
+// 🎌 Jour férié affiché même sans absence
+if (specialDays[key] === "ferie") {
+  html += `<small style="color:#0d47a1;font-weight:bold">🎌 Férié</small>`
+  div.style.background = "#e3f2fd"
+  div.style.border = "2px dashed #1976d2"
+}
+
+// ❌ Absence classique (hors férié)
+else if (day.absent) {
+  html += `<small style="color:#c62828;font-weight:bold">ABS ${day.absent}h</small>`
+  div.style.background = "#ffebee"
+  div.style.border = "2px solid #c62828"
 }
 
 div.innerHTML = html
