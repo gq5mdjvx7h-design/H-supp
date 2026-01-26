@@ -535,6 +535,7 @@ function calculate(){
   let weeks = {}
   let absences = {}
   let totalRecup = 0
+  let recups = {}      // Heures de récupération par semaine (traitées comme absence)
   let details = []
   let h25 = 0
   let h50 = 0
@@ -554,30 +555,44 @@ const reportPrev = getLastValidReport(period.index);
 
 // --- 1. TRAITEMENT DES DONNÉES (HEBDOMADAIRE) ---
 Object.entries(data).forEach(([k, v]) => {
-  const parts = k.split('-')
-  const d = new Date(parts[0], parts[1] - 1, parts[2])
+  // 🔹 Conversion de la date (sécurisée local / pas UTC)
+const parts = k.split('-')
+const d = new Date(parts[0], parts[1] - 1, parts[2])
 
-  if (d >= period.start && d <= period.end) {
-    const day = d.getDay() || 7
-    const monday = new Date(d)
-    if (day !== 1) monday.setDate(monday.getDate() - (day - 1))
+// 🔹 On ne traite QUE les jours dans la période active
+if (d >= period.start && d <= period.end) {
 
-    const key = dateKeyLocal(monday)
-    weeks[key] = (weeks[key] || 0) + (v.extra || 0)
+  // 🔹 Calcul du lundi de la semaine
+  const day = d.getDay() || 7
+  const monday = new Date(d)
+  if (day !== 1) monday.setDate(monday.getDate() - (day - 1))
 
-// 🔒 Absence uniquement si jour ouvré
-const dayOfWeek = d.getDay(); // 0 = dim, 6 = sam
-if (dayOfWeek !== 0 && dayOfWeek !== 6) {
-  absences[key] = (absences[key] || 0) + (v.absent || 0);
-}
+  const key = dateKeyLocal(monday)
 
-totalRecup += v.recup || 0;
+  // ➕ Heures supplémentaires
+  weeks[key] = (weeks[key] || 0) + (v.extra || 0)
+
+  // ❌ Absences : uniquement jours ouvrés
+  const dayOfWeek = d.getDay() // 0 = dim, 6 = sam
+  if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+    absences[key] = (absences[key] || 0) + (v.absent || 0)
   }
+
+  // 🔁 Récupérations
+  // ⚠️ IMPORTANT :
+  // La récup est traitée comme du temps NON travaillé
+  // → elle réduit le seuil de déclenchement des heures sup
+  recups[key] = (recups[key] || 0) + (v.recup || 0)
+
+  // 🔹 Total récup global (déduit du solde final)
+  totalRecup += v.recup || 0
+}
 })
 
   // --- 2. CALCUL DES MAJORATIONS (RÈGLE DÉFINITIVE) ---
 Object.entries(weeks).forEach(([week, extra]) => {
   const absent = absences[week] || 0;
+const base = Math.max(0, 35 - absent);
 
   // Heures réellement travaillées sur la semaine
   const base = Math.max(0, 35 - absent);
