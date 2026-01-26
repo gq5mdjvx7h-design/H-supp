@@ -589,51 +589,45 @@ const reportPrev = getLastValidReport(period.index);
 // --- 1. TRAITEMENT DES DONNÉES (HEBDOMADAIRE) ---
 Object.entries(data).forEach(([k, v]) => {
   // 🔹 Conversion de la date (sécurisée local / pas UTC)
-const parts = k.split('-')
-const d = new Date(parts[0], parts[1] - 1, parts[2])
+Object.entries(data).forEach(([k, v]) => {
 
-// 🔹 On ne traite QUE les jours dans la période active
-if (d >= period.start && d <= period.end) {
+  const parts = k.split('-')
+  const d = new Date(parts[0], parts[1] - 1, parts[2])
+  const dayOfWeek = d.getDay() // 0 = dim
 
-  // 🔹 Calcul du lundi de la semaine
+  if (d < period.start || d > period.end) return
+
+  // 🔹 calcul lundi de la semaine
   const day = d.getDay() || 7
   const monday = new Date(d)
   if (day !== 1) monday.setDate(monday.getDate() - (day - 1))
-
-  const key = dateKeyLocal(monday)
+  const weekKey = dateKeyLocal(monday)
 // 🎌 Jour férié chômé payé → NON travaillé (juridique)
 const dayOfWeek = d.getDay(); // 0 = dim, 6 = sam
 
-// 🎌 FÉRIÉ = absence automatique de 7h
-if (
-  specialDays[k] === "ferie" &&
-  dayOfWeek !== 0 &&
-  dayOfWeek !== 6
-) {
-  v.absent = DAILY_WORK_HOURS; // 7h
-}
-}
-  // ➕ Heures supplémentaires
-  weeks[key] = (weeks[key] || 0) + (v.extra || 0)
+  // 🎌 FÉRIÉ = absence automatique 7h
+  if (
+    specialDays[k] === "ferie" &&
+    dayOfWeek !== 0 &&
+    dayOfWeek !== 6
+  ) {
+    v.absent = DAILY_WORK_HOURS
+    feries[weekKey] = (feries[weekKey] || 0) + DAILY_WORK_HOURS
+  }
 
-  // ❌ Absences : uniquement jours ouvrés NON fériés
+}
+  weeks[weekKey] = (weeks[weekKey] || 0) + (v.extra || 0)
 
 if (
   dayOfWeek !== 0 &&
   dayOfWeek !== 6 &&
   specialDays[k] !== "ferie"
 ) {
-  absences[key] = (absences[key] || 0) + (v.absent || 0)
+  absences[weekKey] = (absences[weekKey] || 0) + (v.absent || 0)
 }
 
-  // 🔁 Récupérations
-  // ⚠️ IMPORTANT :
-  // La récup est traitée comme du temps NON travaillé
-  // → elle réduit le seuil de déclenchement des heures sup
-  recups[key] = (recups[key] || 0) + (v.recup || 0)
-
-  // 🔹 Total récup global (déduit du solde final)
-  totalRecup += v.recup || 0
+recups[weekKey] = (recups[weekKey] || 0) + (v.recup || 0)
+totalRecup += v.recup || 0
 }
 })
 
