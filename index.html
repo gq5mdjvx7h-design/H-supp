@@ -805,7 +805,18 @@ function save(){ localStorage.setItem(STORAGE.data,JSON.stringify(data)) }
 function isIOS(){return /iPad|iPhone|iPod/.test(navigator.userAgent)}
 
 function exportJSON(){
-  const payload = { data, closures, reports }
+  const payload = {
+  data,
+  closures,
+  reports,
+  locks,
+  periodMeta,
+  exerciseStart,
+  annualDate,
+  specialDays,
+  BASE_HEBDO,
+  ANNUAL_RATE
+}
   const json = JSON.stringify(payload, null, 2)
   const blob = new Blob([json], { type: "application/json" })
   const filename = `heures_sup_${currentSuffix}.json`
@@ -852,14 +863,45 @@ input.click()
 function confirmImportJSON(){loadJSON(jsonArea.value);closeJSONPopup()}
 
 function loadJSON(text){
-let obj
-try{obj = JSON.parse(text)}catch(e){alert("❌ JSON invalide");return}
-if(!obj.data||!obj.closures||!obj.reports){alert("❌ Format incorrect");return}
-data=obj.data; closures=obj.closures; reports=obj.reports
-localStorage.setItem(STORAGE.data,JSON.stringify(data))
-localStorage.setItem(STORAGE.closures,JSON.stringify(closures))
-localStorage.setItem(STORAGE.reports,JSON.stringify(reports))
-buildPeriods(); update(); alert("✅ Import réussi")
+  let obj
+  try {
+    obj = JSON.parse(text)
+  } catch(e){
+    alert("❌ JSON invalide")
+    return
+  }
+
+  if(!obj.data || !obj.closures || !obj.reports){
+    alert("❌ Format incorrect")
+    return
+  }
+
+  data = obj.data
+  closures = obj.closures
+  reports = obj.reports
+  locks = obj.locks || {}
+  periodMeta = obj.periodMeta || {}
+  exerciseStart = obj.exerciseStart || ""
+  annualDate = obj.annualDate || ""
+  specialDays = obj.specialDays || {}
+
+  BASE_HEBDO = Number(obj.BASE_HEBDO) || 35
+  ANNUAL_RATE = Number(obj.ANNUAL_RATE) || 10
+
+  // 🔐 stockage par exercice (important)
+  localStorage.setItem(STORAGE.data, JSON.stringify(data))
+  localStorage.setItem(STORAGE.closures, JSON.stringify(closures))
+  localStorage.setItem(STORAGE.reports, JSON.stringify(reports))
+  localStorage.setItem(STORAGE.locks, JSON.stringify(locks))
+  localStorage.setItem(STORAGE.periodMeta, JSON.stringify(periodMeta))
+  localStorage.setItem(STORAGE.exerciseStart, exerciseStart)
+  localStorage.setItem(STORAGE.annualDate, annualDate)
+  localStorage.setItem(STORAGE.specialDays, JSON.stringify(specialDays))
+  localStorage.setItem("BASE_HEBDO_" + currentSuffix, BASE_HEBDO)
+  localStorage.setItem("ANNUAL_RATE_" + currentSuffix, ANNUAL_RATE)
+
+  update()
+  alert("✅ Import complet réussi")
 }
 
 function closeJSONPopup(){popupJSON.style.display = "none"}
