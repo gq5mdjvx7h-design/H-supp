@@ -587,48 +587,42 @@ const reportPrev = getLastValidReport(period.index);
   <b>Report précédent :</b> ${reportPrev.toFixed(2)} h`
 
 // --- 1. TRAITEMENT DES DONNÉES (HEBDOMADAIRE) ---
-Object.entries(data).forEach(([k, v]) => {
-  // 🔹 Conversion de la date (sécurisée local / pas UTC)
-Object.entries(data).forEach(([k, v]) => {
+Object.entries(data).forEach(([date, v]) => {
 
-  const parts = k.split('-')
-  const d = new Date(parts[0], parts[1] - 1, parts[2])
-  const dayOfWeek = d.getDay() // 0 = dim
+  const [y, m, d] = date.split("-").map(Number)
+  const dayDate = new Date(y, m - 1, d)
+  const dayOfWeek = dayDate.getDay() // 0 = dim
 
-  if (d < period.start || d > period.end) return
+  if (dayDate < period.start || dayDate > period.end) return
 
-  // 🔹 calcul lundi de la semaine
-  const day = d.getDay() || 7
-  const monday = new Date(d)
-  if (day !== 1) monday.setDate(monday.getDate() - (day - 1))
+  // 📅 Lundi de la semaine
+  const isoDay = dayOfWeek === 0 ? 7 : dayOfWeek
+  const monday = new Date(dayDate)
+  monday.setDate(monday.getDate() - (isoDay - 1))
   const weekKey = dateKeyLocal(monday)
-// 🎌 Jour férié chômé payé → NON travaillé (juridique)
-const dayOfWeek = d.getDay(); // 0 = dim, 6 = sam
 
-  // 🎌 FÉRIÉ = absence automatique 7h
+  // 🎌 FÉRIÉ = absence automatique 7h (jours ouvrés)
+  let absentHours = v.absent || 0
   if (
-    specialDays[k] === "ferie" &&
+    specialDays[date] === "ferie" &&
     dayOfWeek !== 0 &&
     dayOfWeek !== 6
   ) {
-    v.absent = DAILY_WORK_HOURS
+    absentHours = DAILY_WORK_HOURS
     feries[weekKey] = (feries[weekKey] || 0) + DAILY_WORK_HOURS
   }
 
-}
+  // ➕ Heures effectuées au-delà de la base ajustée
   weeks[weekKey] = (weeks[weekKey] || 0) + (v.extra || 0)
 
-if (
-  dayOfWeek !== 0 &&
-  dayOfWeek !== 6 &&
-  specialDays[k] !== "ferie"
-) {
-  absences[weekKey] = (absences[weekKey] || 0) + (v.absent || 0)
-}
+  // ❌ Absences (inclut férié car transformé en absence)
+  if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+    absences[weekKey] = (absences[weekKey] || 0) + absentHours
+  }
 
-recups[weekKey] = (recups[weekKey] || 0) + (v.recup || 0)
-totalRecup += v.recup || 0
-}
+  // 🔁 Récupérations
+  recups[weekKey] = (recups[weekKey] || 0) + (v.recup || 0)
+  totalRecup += v.recup || 0
 })
 
   // --- 2. CALCUL DES MAJORATIONS (RÈGLE DÉFINITIVE) ---
