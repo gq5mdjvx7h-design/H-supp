@@ -752,14 +752,25 @@ if (
 function openPopup(date){
   if(locks[currentPeriodIndex]){alert("🔒 Cette période est verrouillée");return}
 
-selectedDate=date
-const d=data[date]||{extra:0,recup:0,absent:0}
-popupDate.textContent=date
-manualExtra.value=d.extra
-manualRecup.value=d.recup
-  absentHours.value=d.absent||0
-  isAbsent.checked=(d.absent||0)>0
-document.getElementById("popup").style.display="flex"
+  selectedDate = date
+
+  // 🎌 FÉRIÉ = absence forcée 7h
+  if (
+    specialDays[date] === "ferie"
+  ) {
+    if (!data[date]) data[date] = {extra:0, recup:0, absent:0}
+    data[date].absent = DAILY_WORK_HOURS
+  }
+
+  const d = data[date] || {extra:0, recup:0, absent:0}
+
+  popupDate.textContent = date
+  manualExtra.value = d.extra
+  manualRecup.value = d.recup
+  absentHours.value = d.absent || 0
+  isAbsent.checked = (d.absent || 0) > 0
+
+  document.getElementById("popup").style.display = "flex"
 }
 
 function closePopup(){document.getElementById("popup").style.display="none";update()}
