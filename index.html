@@ -136,8 +136,7 @@ button,input,select,textarea{width:100%;padding:8px;margin:5px 0}
 <div class="popup" id="popupNotice">
   <div class="popup-content" style="max-width:800px;max-height:80vh;overflow:auto;">
     <h3>📘 Notice utilisateur – Compteur annuel d’heures</h3>
-<hr>
-<button onclick="closeNotice()">Fermer</button>
+
     <p>
       Cet outil permet de suivre et d’estimer les heures de travail,
       les heures supplémentaires, les récupérations et les absences
@@ -217,7 +216,8 @@ button,input,select,textarea{width:100%;padding:8px;margin:5px 0}
       L’outil ne constitue pas un logiciel de paie
       et ne se substitue pas aux documents officiels de l’employeur.
     </p>
-
+<hr>
+<button onclick="closeNotice()">Fermer</button>
   </div>
 </div>
 <h1>Compteur Heures Sup</h1>
@@ -1227,11 +1227,10 @@ function exportMonthlyFullPDF(){
 const period = getCurrentPeriod();
 if(period){
   pdf.text(
-    `Période comptable : ${period.start.toLocaleDateString()} → ${
-      period.end.getFullYear() === 2099 ? "en cours" : period.end.toLocaleDateString()
-    }`,
-    10, y
-  );
+   pdf.text(
+  "Période comptable : période active au moment de l’export",
+  10, y
+);
   y += 6;
 }
   pdf.line(10, y, 200, y)
@@ -1417,7 +1416,7 @@ function exportAnnualPDF(){
     const brut = p25*1.25 + p50*1.5 + reportPrev
     const net = brut - pRec
 
-    annualNet += net
+ annualNet = net
 
     y += 4
     pdf.text(`Total 25 % : ${p25.toFixed(2)} h`, 12, y); y+=4
