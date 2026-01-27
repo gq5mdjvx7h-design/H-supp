@@ -777,7 +777,9 @@ const reportPrev = getLastValidReport(period.index);
   lockInfo.textContent = locks[period.index] ? "🔒 Période verrouillée" : "🔓 Période déverrouillée"
   periodInfo.innerHTML=`<b>Période :</b> ${period.start.toLocaleDateString()} → ${period.end.getFullYear()===2099?"en cours":period.end.toLocaleDateString()}<br>
   <b>Report précédent :</b> ${reportPrev.toFixed(2)} h`
-
+// 🔒 Normalisation des bornes de période
+period.start.setHours(0, 0, 0, 0)
+period.end.setHours(0, 0, 0, 0)
 // --- 1. TRAITEMENT DES DONNÉES (HEBDOMADAIRE) ---
 Object.entries(data).forEach(([date, v]) => {
 
@@ -787,11 +789,18 @@ Object.entries(data).forEach(([date, v]) => {
 
   if (dayDate < period.start || dayDate > period.end) return
 
-  // 📅 Lundi de la semaine
-  const isoDay = dayOfWeek === 0 ? 7 : dayOfWeek
-  const monday = new Date(dayDate)
-  monday.setDate(monday.getDate() - (isoDay - 1))
-  const weekKey = dateKeyLocal(monday)
+// 📅 Lundi de la semaine
+const isoDay = dayOfWeek === 0 ? 7 : dayOfWeek
+const monday = new Date(dayDate)
+monday.setDate(monday.getDate() - (isoDay - 1))
+
+// ❌ ignorer les semaines dont le lundi est hors période
+if (monday < period.start || monday > period.end) {
+  return
+}
+
+// ✅ semaine valide → on peut créer la clé
+const weekKey = dateKeyLocal(monday)
 
   // 🎌 FÉRIÉ = absence automatique 7h (jours ouvrés)
   let absentHours = v.absent || 0
