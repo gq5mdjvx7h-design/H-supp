@@ -5,6 +5,18 @@
 <title>Compteur Heures Sup – AUTO (Report + détail majorations)</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
+/* 🛠️ FIX SAFARI iOS — select écrasés après <details> */
+.month-nav{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+
+.month-nav select{
+  width:100% !important;
+  min-width:0;
+  flex:1 1 0;
+}
 /* 🌙 MODE SOMBRE */
 body[data-theme="dark"]{
   background:#121212;
@@ -352,18 +364,7 @@ button,input,select,textarea{width:100%;padding:8px;margin:5px 0}
 <button onclick="closeJSONPopup()">Fermer</button>
 </div>
 </div>
-/* 🛠️ FIX SAFARI iOS — select écrasés après <details> */
-.month-nav{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:10px;
-}
 
-.month-nav select{
-  width:100% !important;
-  min-width:0;
-  flex:1 1 0;
-}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
 let midnightTimer = null
