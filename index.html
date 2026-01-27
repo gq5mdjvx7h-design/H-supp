@@ -1016,17 +1016,19 @@ function isIOS(){return /iPad|iPhone|iPod/.test(navigator.userAgent)}
 
 function exportJSON(){
   const payload = {
-  data,
-  closures,
-  reports,
-  locks,
-  periodMeta,
-  exerciseStart,
-  annualDate,
-  specialDays,
-  BASE_HEBDO,
-  annualRate
-}
+    version: 1,                // ✅ version
+    exercise: currentSuffix,   // ✅ année d’exercice
+    data,
+    closures,
+    reports,
+    locks,
+    periodMeta,
+    exerciseStart,
+    annualDate,
+    specialDays,
+    BASE_HEBDO,
+    annualRate
+  }
   const json = JSON.stringify(payload, null, 2)
   const blob = new Blob([json], { type: "application/json" })
   const filename = `heures_sup_${currentSuffix}.json`
@@ -1077,14 +1079,35 @@ function loadJSON(text){
   try {
     obj = JSON.parse(text)
   } catch(e){
+      // ✅ Vérification version
+  if(obj.version !== 1){
+    alert("❌ Version de sauvegarde incompatible")
+    return
+  }
+
+  // ✅ Vérification exercice
+  if(obj.exercise && String(obj.exercise) !== String(currentSuffix)){
+    const ok = confirm(
+      `⚠️ Ce fichier appartient à l’exercice ${obj.exercise}.\n\n` +
+      `Voulez-vous basculer automatiquement dessus ?`
+    )
+    if(!ok) return
+
+    localStorage.setItem("ACTIVE_YEAR_SUFFIX", obj.exercise)
+    location.reload()
+    return
+  }
     alert("❌ JSON invalide")
     return
   }
 
-  if(!obj.data || !obj.closures || !obj.reports){
-    alert("❌ Format incorrect")
-    return
-  }
+  if(!obj.data || !obj.closures){
+  alert("❌ Sauvegarde invalide ou incomplète")
+  return
+}
+if(!confirm("⚠️ Cette action va remplacer les données de l’exercice en cours.\n\nContinuer ?")){
+  return
+}
 
   data = obj.data
   closures = obj.closures
