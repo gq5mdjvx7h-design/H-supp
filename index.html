@@ -5,6 +5,31 @@
 <title>Compteur Heures Sup – AUTO (Report + détail majorations)</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
+/* 🌙 MODE SOMBRE */
+body[data-theme="dark"] p[style*="Sauvegarde"]{
+  background:#2a2a2a;
+  border-color:#555;
+  color:#ddd;
+}
+
+body[data-theme="dark"] .config,
+body[data-theme="dark"] .totaux,
+body[data-theme="dark"] .popup-content{
+  background:#1e1e1e;
+}
+
+body[data-theme="dark"] .day{
+  background:#1e1e1e;
+}
+
+body[data-theme="dark"] button,
+body[data-theme="dark"] input,
+body[data-theme="dark"] select,
+body[data-theme="dark"] textarea{
+  background:#2a2a2a;
+  color:#fff;
+  border:1px solid #444;
+}
 /* PARTIE 1 — configuration repliable */
 .section summary{
   cursor:pointer;
@@ -65,12 +90,136 @@ button,input,select,textarea{width:100%;padding:8px;margin:5px 0}
 .day.today{outline:3px solid #ff9800;box-shadow:0 0 6px rgba(255,152,0,.8)}
 </style>
 </head>
+<div class="popup" id="helpConfig">
+  <div class="popup-content">
+    <h3>❓ Réglages</h3>
+    <p>
+    La base représente une semaine normale (ex : 35h).<br><br>
+    Chaque exercice correspond à une année.<br><br>
+    Modifier un réglage recalcule automatiquement les résultats.
+    </p>
+    <button onclick="this.closest('.popup').style.display='none'">Fermer</button>
+  </div>
+</div>
 
+<div class="popup" id="helpCalendar">
+  <div class="popup-content">
+    <h3>❓ Calendrier</h3>
+    <p>
+    Heures sup = heures travaillées en plus.<br><br>
+    Récup = heures reprises plus tard.<br><br>
+    Absence = temps non travaillé.<br><br>
+    Les jours fériés sont gérés automatiquement.
+    </p>
+    <button onclick="this.closest('.popup').style.display='none'">Fermer</button>
+  </div>
+</div>
 
+<div class="popup" id="helpCalc">
+  <div class="popup-content">
+    <h3>❓ Calcul</h3>
+    <p>
+    Chaque semaine est analysée séparément.<br><br>
+    Si tu travailles moins, la semaine attend moins d’heures.<br><br>
+    Les heures sup commencent seulement après 35h travaillées.<br><br>
+    Ce n’est pas un calcul de paie, mais un suivi annuel.
+    </p>
+    <button onclick="this.closest('.popup').style.display='none'">Fermer</button>
+  </div>
+</div>
+<div class="popup" id="popupNotice">
+  <div class="popup-content" style="max-width:800px;max-height:80vh;overflow:auto;">
+    <h3>📘 Notice utilisateur – Compteur annuel d’heures</h3>
+
+    <p>
+      Cet outil permet de suivre et d’estimer les heures de travail,
+      les heures supplémentaires, les récupérations et les absences
+      dans le cadre d’un <b>compteur annuel</b>.
+    </p>
+
+    <hr>
+
+    <h4>🗓️ Principe général</h4>
+    <p>
+      Le suivi est organisé par exercice annuel, découpé en périodes
+      comptables. Les calculs sont réalisés semaine par semaine,
+      puis cumulés sur l’année.
+    </p>
+
+    <h4>⏱️ Base hebdomadaire</h4>
+    <p>
+      La base hebdomadaire (ex : 35h) représente une semaine complète
+      théorique avant prise en compte des absences, récupérations
+      et jours fériés.
+    </p>
+
+    <h4>❌ Absences</h4>
+    <p>
+      Les absences correspondent à du temps non travaillé.
+      Elles réduisent le volume d’heures attendues dans la semaine
+      et ne génèrent pas d’heures supplémentaires.
+    </p>
+
+    <h4>🔁 Récupérations</h4>
+    <p>
+      Les récupérations sont des heures précédemment travaillées,
+      reprises ultérieurement sous forme de repos.
+    </p>
+
+    <p>
+      <b>Dans cet outil, les récupérations sont assimilées à du temps
+      non travaillé et réduisent le volume hebdomadaire de référence
+      dans le cadre d’un compteur annuel.</b>
+    </p>
+
+    <h4>➕ Heures supplémentaires</h4>
+    <p>
+      Les heures supplémentaires sont déclenchées uniquement
+      après dépassement de l’équivalent de 35 heures
+      réellement travaillées sur la semaine.
+    </p>
+
+    <ul>
+      <li>36ᵉ à 43ᵉ heure : majoration 25 %</li>
+      <li>Au-delà : majoration 50 %</li>
+    </ul>
+
+    <h4>📆 Périodes et clôtures</h4>
+    <p>
+      Les périodes se terminent le dimanche.
+      La période suivante débute automatiquement le lundi.
+    </p>
+
+    <h4>🔒 Verrouillage</h4>
+    <p>
+      Il est possible de verrouiller une période ou la configuration
+      générale afin d’éviter toute modification involontaire.
+    </p>
+
+    <h4>💾 Sauvegarde</h4>
+    <p>
+      Les données sont enregistrées localement sur l’appareil utilisé.
+      Il est fortement recommandé d’effectuer des exports réguliers
+      pour sécuriser le suivi annuel.
+    </p>
+
+    <hr>
+
+    <p style="font-size:12px;color:#777">
+      Cette notice est fournie à titre informatif.
+      L’outil ne constitue pas un logiciel de paie
+      et ne se substitue pas aux documents officiels de l’employeur.
+    </p>
+
+    <button onclick="closeNotice()">Fermer</button>
+  </div>
+</div>
 <body>
-
+<button onclick="document.getElementById('helpConfig').style.display='flex'">❓</button>
 <h1>Compteur Heures Sup</h1>
-
+<p style="text-align:center">
+  <button onclick="toggleTheme()">🌙 / ☀️ Mode sombre</button>
+</p>
 <p style="text-align:center">
   Exercice : <b id="activeYearLabel"></b>
   <button onclick="switchYear()">📁 Changer</button>
@@ -100,7 +249,9 @@ button,input,select,textarea{width:100%;padding:8px;margin:5px 0}
     <p id="lockInfo"></p>
 
     <div id="rateContainer"></div>
-
+<hr>
+<button onclick="toggleConfigLock()">🔒 / 🔓 Verrouiller la configuration</button>
+<p id="configLockInfo"></p>
     <hr>
     <button onclick="exportJSON()">⬇️ Exporter (.json)</button>
     <button onclick="importJSON()">⬆️ Importer (.json)</button>
@@ -184,6 +335,15 @@ button,input,select,textarea{width:100%;padding:8px;margin:5px 0}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
 let midnightTimer = null
+const savedTheme = localStorage.getItem("THEME") || "light";
+document.body.dataset.theme = savedTheme;
+
+function toggleTheme(){
+  const next =
+    document.body.dataset.theme === "dark" ? "light" : "dark";
+  document.body.dataset.theme = next;
+  localStorage.setItem("THEME", next);
+}
 function autoSwitchPeriodAtMidnight(){
   const now = new Date()
 
@@ -396,12 +556,19 @@ document.getElementById("popupClosures").style.display="flex"
 }
 
 function closeClosures(){document.getElementById("popupClosures").style.display="none"}
-
+function forceSunday(dateStr){
+  if(!dateStr) return dateStr;
+  const d = new Date(dateStr);
+  const day = d.getDay(); // 0 = dimanche
+  if(day === 0) return dateStr;
+  d.setDate(d.getDate() - day);
+  return d.toISOString().slice(0,10);
+}
 function saveClosures(){
   const inputs = [...document.querySelectorAll("#closuresInputs input")]
 
   closures = inputs
-    .map(i => i.value)
+   .map(i => forceSunday(i.value))
     .filter(v => v)
     .sort()
 
@@ -477,7 +644,28 @@ function toggleLock(){
   localStorage.setItem(STORAGE.locks,JSON.stringify(locks))
   update()
 }
+function toggleConfigLock(){
+  const key = "CONFIG_LOCK_" + currentSuffix;
+  const locked = localStorage.getItem(key) === "true";
+  localStorage.setItem(key, !locked);
+  applyConfigLock();
+}
 
+function applyConfigLock(){
+  const locked =
+    localStorage.getItem("CONFIG_LOCK_" + currentSuffix) === "true";
+
+  document.querySelectorAll(
+    "#exerciseStartInput, #baseHebdoInput, #annualDateInput"
+  ).forEach(el => el.disabled = locked);
+
+  const info = document.getElementById("configLockInfo");
+  if(info){
+    info.textContent = locked
+      ? "🔒 Configuration verrouillée"
+      : "🔓 Configuration modifiable";
+  }
+}
 function getCurrentPeriod(){
   let start = getBaseStartDate()
 
@@ -752,7 +940,13 @@ if (
       </div>`;
   }
 }
+function openNotice(){
+  document.getElementById("popupNotice").style.display = "flex";
+}
 
+function closeNotice(){
+  document.getElementById("popupNotice").style.display = "none";
+}
 function openPopup(date){
   if(locks[currentPeriodIndex]){alert("🔒 Cette période est verrouillée");return}
 
@@ -959,6 +1153,7 @@ function update(){
   generateCalendar();
   calculate();
   autoBackup();
+  applyConfigLock();
 }
 
 monthSelect.onchange = () => {
@@ -979,7 +1174,9 @@ periodSelect.onchange = () => {
 
 const annualDateInput = document.getElementById("annualDateInput");
 annualDateInput.value = annualDate;
-annualDateInput.onchange = ()=>{
+annualDate = forceSunday(annualDateInput.value);
+annualDateInput.value = annualDate;
+localStorage.setItem(STORAGE.annualDate, annualDate);
   annualDate = annualDateInput.value;
   localStorage.setItem(STORAGE.annualDate, annualDate);
 };
@@ -1095,12 +1292,38 @@ function closeLegalPopup(){
   </div>
 </div>
 <p style="text-align:center; font-size:12px; color:#666; margin-top:30px;">
-  © Tous droits réservés Chauvel Anthony ·
-  <a href="#" onclick="openLegalPopup()" style="color:#1976d2;text-decoration:none;">
-    ℹ️ Informations légales & calcul
+  © Tous droits réservés C.Anthony ·
+  <a href="#" onclick="openLegalPopup()" style="margin-right:10px">
+  ℹ️ Informations légales & calcul
+</a>
+<a href="#" onclick="openNotice()">
+  📘 Notice utilisateur
+</a>
   </a>
 </p>
+<p style="
+  max-width:900px;
+  margin:20px auto;
+  font-size:12px;
+  color:#555;
+  background:#fffde7;
+  border:1px solid #ffe082;
+  padding:12px;
+  border-radius:8px;
+  text-align:center;
+">
+  ⚠️ <b>Sauvegarde des données</b><br><br>
 
+  Les données saisies dans cette application sont enregistrées
+  <b>localement sur cet appareil</b> (navigateur / téléphone / tablette).<br><br>
+
+  Elles peuvent être perdues en cas de suppression du navigateur,
+  de changement d’appareil, de réinitialisation ou de nettoyage des données.<br><br>
+
+  <b>Il est fortement recommandé d’effectuer des exports réguliers</b>
+  (mensuels ou après chaque clôture) afin de conserver une sauvegarde fiable
+  de votre suivi annuel.
+</p>
 <!-- 🔽 POPUP LÉGAL -->
 <div class="popup" id="popupLegal">
   <div class="popup-content" style="max-width:700px;max-height:80vh;overflow:auto;">
@@ -1112,7 +1335,19 @@ Cet outil a pour finalité d’aider au suivi, à l’estimation et à la compr�
 du temps de travail, des heures supplémentaires, des récupérations et des soldes
 horaires, à partir des données saisies par l’utilisateur.
 </p>
-
+<hr>
+<p>
+<b>Fonctionnement général</b><br><br>
+Cet outil fonctionne comme un <b>compteur annuel du temps de travail</b>.<br><br>
+Lorsqu’une semaine n’est pas complète (absence ou récupération),
+le nombre d’heures attendues est automatiquement ajusté.<br><br>
+Les récupérations sont assimilées à du temps non travaillé et
+réduisent le volume hebdomadaire de référence dans le cadre
+d’un compteur annuel.<br><br>
+Les heures supplémentaires ne sont jamais déclenchées avant
+d’avoir dépassé l’équivalent de <b>35 heures réellement travaillées</b>.
+</p>
+<hr>
 <p>
 Il s’agit d’un outil d’aide au calcul et à la lecture des données, dont les résultats
 sont fournis à titre indicatif. Il ne constitue ni un logiciel de paie, ni un document
@@ -1200,8 +1435,14 @@ le volume d’heures travaillables dans la semaine selon le paramétrage retenu.
 <h4>➕ Heures supplémentaires</h4>
 
 <p>
-Les heures supplémentaires correspondent aux heures de travail effectif accomplies
-au-delà de la durée légale hebdomadaire de référence, fixée par défaut à 35 heures.
+Les heures supplémentaires sont calculées dans une logique de
+compteur annuel, à partir des heures réellement travaillées.
+</p>
+
+<p>
+Le seuil de déclenchement correspond à l’équivalent de
+35 heures hebdomadaires, ajusté selon les absences
+et les récupérations.
 </p>
 
 <p>
