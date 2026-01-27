@@ -10,51 +10,16 @@
   display:grid;
   grid-template-columns:1fr 1fr;
   gap:10px;
+  margin-bottom:10px;
 }
 
 .month-nav select{
-  width:100% !important;
-  min-width:0;
-  flex:1 1 0;
-}
-/* 🌙 MODE SOMBRE */
-body[data-theme="dark"]{
-  background:#121212;
-  color:#e0e0e0;
-}
-body[data-theme="dark"] p[style*="Sauvegarde"]{
-  background:#2a2a2a;
-  border-color:#555;
-  color:#ddd;
+  width:100%;
+  display:block;                 /* 🔥 CRUCIAL iOS */
+  box-sizing:border-box;
+  -webkit-appearance: menulist;  /* évite le bug compact */
 }
 
-body[data-theme="dark"] .config,
-body[data-theme="dark"] .totaux,
-body[data-theme="dark"] .popup-content{
-  background:#1e1e1e;
-}
-
-body[data-theme="dark"] .day{
-  background:#1e1e1e;
-}
-
-body[data-theme="dark"] button,
-body[data-theme="dark"] input,
-body[data-theme="dark"] select,
-body[data-theme="dark"] textarea{
-  background:#2a2a2a;
-  color:#fff;
-  border:1px solid #444;
-}
-/* 🌙 FIX iOS — options select illisibles en mode sombre */
-body[data-theme="dark"] option{
-  background-color:#1e1e1e;
-  color:#ffffff;
-}
-
-body[data-theme="dark"] .month-nav select{
-  font-weight:600;
-}
 /* PARTIE 1 — configuration repliable */
 .section summary{
   cursor:pointer;
@@ -108,7 +73,13 @@ h1,h2{text-align:center}
 }
 .day.in-period{border:2px solid #2e7d32;background:#e8f5e9}
 .month-nav{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
-button,input,select,textarea{width:100%;padding:8px;margin:5px 0}
+button,
+input,
+textarea{
+  width:100%;
+  padding:8px;
+  margin:5px 0;
+}
 .popup{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:10}
 .popup-content{background:#fff;padding:20px;width:380px;border-radius:10px}
 .breakdown{background:#f9f9f9;padding:10px;border-radius:6px;margin-top:10px;font-size:14px}
@@ -243,7 +214,7 @@ button,input,select,textarea{width:100%;padding:8px;margin:5px 0}
 </div>
 <h1>Compteur Heures Sup</h1>
 <p style="text-align:center">
-  <button onclick="toggleTheme()">🌙 / ☀️ Mode sombre</button>
+
 </p>
 <p style="text-align:center">
   Exercice : <b id="activeYearLabel"></b>
@@ -368,15 +339,7 @@ button,input,select,textarea{width:100%;padding:8px;margin:5px 0}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
 let midnightTimer = null
-const savedTheme = localStorage.getItem("THEME") || "light";
-document.body.dataset.theme = savedTheme;
 
-function toggleTheme(){
-  const next =
-    document.body.dataset.theme === "dark" ? "light" : "dark";
-  document.body.dataset.theme = next;
-  localStorage.setItem("THEME", next);
-}
 function autoSwitchPeriodAtMidnight(){
   const now = new Date()
 
