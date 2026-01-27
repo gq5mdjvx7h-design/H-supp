@@ -1415,7 +1415,7 @@ function exportAnnualPDF(){
     const brut = p25*1.25 + p50*1.5 + reportPrev
     const net = brut - pRec
 
- annualNet = net
+annualNet += net
 
     y += 4
     pdf.text(`Total 25 % : ${p25.toFixed(2)} h`, 12, y); y+=4
