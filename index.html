@@ -6,6 +6,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
 /* 🌙 MODE SOMBRE */
+body[data-theme="dark"]{
+  background:#121212;
+  color:#e0e0e0;
+}
 body[data-theme="dark"] p[style*="Sauvegarde"]{
   background:#2a2a2a;
   border-color:#555;
@@ -211,7 +215,6 @@ button,input,select,textarea{width:100%;padding:8px;margin:5px 0}
       et ne se substitue pas aux documents officiels de l’employeur.
     </p>
 
-    <button onclick="closeNotice()">Fermer</button>
   </div>
 </div>
 <body>
@@ -227,7 +230,14 @@ button,input,select,textarea{width:100%;padding:8px;margin:5px 0}
 
 
 <details class="section">
-  <summary>🔧 Configuration</summary>
+ <summary>
+  🔧 Configuration
+  <button
+    style="float:right"
+    onclick="document.getElementById('helpConfig').style.display='flex'">
+    ❓
+  </button>
+</summary>
 
   <div class="config">
 
@@ -1174,10 +1184,10 @@ periodSelect.onchange = () => {
 
 const annualDateInput = document.getElementById("annualDateInput");
 annualDateInput.value = annualDate;
-annualDate = forceSunday(annualDateInput.value);
-annualDateInput.value = annualDate;
-localStorage.setItem(STORAGE.annualDate, annualDate);
-  annualDate = annualDateInput.value;
+
+annualDateInput.onchange = () => {
+  annualDate = forceSunday(annualDateInput.value);
+  annualDateInput.value = annualDate;
   localStorage.setItem(STORAGE.annualDate, annualDate);
 };
 const exerciseStartInput = document.getElementById("exerciseStartInput");
@@ -1299,7 +1309,6 @@ function closeLegalPopup(){
 <a href="#" onclick="openNotice()">
   📘 Notice utilisateur
 </a>
-  </a>
 </p>
 <p style="
   max-width:900px;
