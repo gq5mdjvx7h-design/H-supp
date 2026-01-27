@@ -5,20 +5,27 @@
 <title>Compteur Heures Sup – AUTO (Report + détail majorations)</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
-/* 🛠️ FIX SAFARI iOS — select écrasés après <details> */
-.month-nav{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:10px;
-  margin-bottom:10px;
+/* 🛠️ FIX SAFARI iOS — Empêcher le rétrécissement des select */
+.month-nav {
+  display: flex; /* Utiliser flex pour plus de stabilité */
+  gap: 10px;
+  margin-bottom: 10px;
+  width: 100%;
 }
 
-.month-nav select{
-  width:100%;
-  display:block;                 /* 🔥 CRUCIAL iOS */
-  box-sizing:border-box;
-  -webkit-appearance: menulist;  /* évite le bug compact */
+.month-nav select {
+  flex: 1;           /* Partage l'espace équitablement */
+  min-height: 40px;  /* Taille tactile confortable */
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  background-color: #fff;
+  /* Force l'apparence standard pour éviter le bug de rendu iOS */
+  -webkit-appearance: menulist; 
+  border: 1px solid #ccc;
+  border-radius: 4px;
 }
+
 
 /* PARTIE 1 — configuration repliable */
 .section summary{
@@ -1631,19 +1638,21 @@ function showToast(){
     toast.style.opacity = "0"
   }, 3000)
 }
-// 🛠️ FIX Safari iOS — reflow après fermeture de Configuration
-document.querySelectorAll("details.section").forEach(d=>{
-  d.addEventListener("toggle",()=>{
-    if(!d.open){
-      const nav = document.querySelector(".month-nav")
-      if(!nav) return
-      nav.style.display = "none"
-      requestAnimationFrame(()=>{
-        nav.style.display = "grid"
-      })
+// 🛠️ Amélioration du FIX Safari iOS
+document.querySelectorAll("details.section").forEach(d => {
+  d.addEventListener("toggle", () => {
+    // On cible la zone qui bug
+    const nav = document.querySelector(".month-nav");
+    if (nav) {
+      // Forcer un "repaint" complet
+      nav.style.display = 'none';
+      setTimeout(() => {
+        nav.style.display = 'flex'; // On remet en flex comme défini dans le CSS
+      }, 10);
     }
-  })
-})
+  });
+});
+
 initSelectors()
 buildPeriods()
 autoSwitchPeriodAtMidnight()
