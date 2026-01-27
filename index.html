@@ -136,7 +136,8 @@ button,input,select,textarea{width:100%;padding:8px;margin:5px 0}
 <div class="popup" id="popupNotice">
   <div class="popup-content" style="max-width:800px;max-height:80vh;overflow:auto;">
     <h3>📘 Notice utilisateur – Compteur annuel d’heures</h3>
-
+<hr>
+<button onclick="closeNotice()">Fermer</button>
     <p>
       Cet outil permet de suivre et d’estimer les heures de travail,
       les heures supplémentaires, les récupérations et les absences
@@ -265,8 +266,9 @@ button,input,select,textarea{width:100%;padding:8px;margin:5px 0}
     <hr>
     <button onclick="exportJSON()">⬇️ Exporter (.json)</button>
     <button onclick="importJSON()">⬆️ Importer (.json)</button>
-    <button onclick="exportMonthlyPDF()">📄 Export PDF du mois</button>
-
+   <button onclick="exportMonthlyFullPDF()">📄 PDF mensuel complet</button>
+<button onclick="exportAnnualPDF()">📕 PDF annuel complet</button>
+<button onclick="exportPeriodPDF()">📘 Export PDF de la période</button>
     <hr>
     <label>Date de clôture annuelle</label>
     <input type="date" id="annualDateInput">
@@ -1207,12 +1209,140 @@ exerciseStartInput.onchange = ()=>{
 };
 
   // ===== FONCTION DE VÉRIFICATION DU MOIS EXACT =====
-function exportMonthlyPDF(){
+function exportMonthlyFullPDF(){
   const { jsPDF } = window.jspdf
   const pdf = new jsPDF()
 
+  const title = `Compteur annuel d’heures – Récapitulatif mensuel`
   const monthName = months[viewMonth]
-  const title = `Heures supplémentaires – ${monthName} ${viewYear}`
+
+  let y = 15
+  pdf.setFontSize(14)
+  pdf.text(title, 10, y)
+  y += 10
+
+  pdf.setFontSize(10)
+  pdf.text(`Mois : ${monthName} ${viewYear}`, 10, y); y+=6
+  pdf.text(`Base hebdomadaire : ${BASE_HEBDO} h`, 10, y); y+=6
+
+  pdf.line(10, y, 200, y)
+  y += 8
+
+  let weeks = {}
+  let absences = {}
+  let recups = {}
+  let feries = {}
+
+  Object.entries(data).forEach(([date, v])=>{
+    const d = new Date(date)
+    if(d.getFullYear() !== viewYear || d.getMonth() !== viewMonth) return
+
+    const day = d.getDay()
+    const iso = day === 0 ? 7 : day
+    const monday = new Date(d)
+    monday.setDate(monday.getDate() - (iso - 1))
+    const wk = dateKeyLocal(monday)
+
+    weeks[wk] = (weeks[wk] || 0) + (v.extra || 0)
+    recups[wk] = (recups[wk] || 0) + (v.recup || 0)
+
+    if(day !== 0 && day !== 6){
+      absences[wk] = (absences[wk] || 0) + (v.absent || 0)
+    }
+
+    if(specialDays[date] === "ferie"){
+      feries[wk] = (feries[wk] || 0) + DAILY_WORK_HOURS
+    }
+  })
+
+  let t25=0, t50=0, tRec=0
+
+  Object.keys(weeks).sort().forEach(w=>{
+    const base = Math.max(0, BASE_HEBDO - (absences[w]||0) - (recups[w]||0))
+    const total = base + weeks[w]
+
+    let h25 = 0, h50 = 0
+    if(total > BASE_HEBDO) h25 = Math.min(total, BASE_HEBDO+8)-BASE_HEBDO
+    if(total > BASE_HEBDO+8) h50 = total-(BASE_HEBDO+8)
+
+    t25 += Math.max(0,h25)
+    t50 += Math.max(0,h50)
+    tRec += recups[w]||0
+
+    pdf.text(
+      `Semaine du ${new Date(w).toLocaleDateString()} : ${h25.toFixed(2)}h 25% / ${h50.toFixed(2)}h 50%`,
+      10, y
+    )
+    y+=6
+    if(y>270){pdf.addPage();y=15}
+  })
+
+  y+=6
+  pdf.line(10,y,200,y);y+=8
+  pdf.text(`Total 25 % : ${t25.toFixed(2)} h`,10,y);y+=6
+  pdf.text(`Total 50 % : ${t50.toFixed(2)} h`,10,y);y+=6
+  pdf.text(`Récupérations : ${tRec.toFixed(2)} h`,10,y)
+
+  y+=10
+  pdf.setFontSize(8)
+  pdf.text("Document informatif – ne constitue pas un bulletin de paie.",10,y)
+
+  pdf.save(`mensuel_${monthName}_${viewYear}.pdf`)
+}
+function exportAnnualPDF(){
+  const { jsPDF } = window.jspdf
+  const pdf = new jsPDF()
+
+  let y = 15
+  pdf.setFontSize(14)
+  pdf.text("Compteur annuel d’heures – Bilan annuel",10,y)
+  y+=10
+
+  pdf.setFontSize(10)
+  pdf.text(`Exercice : ${currentSuffix}`,10,y);y+=6
+  pdf.text(`Base hebdomadaire : ${BASE_HEBDO} h`,10,y);y+=6
+  pdf.text(`Date de clôture : ${annualDate || "non définie"}`,10,y);y+=8
+
+  pdf.line(10,y,200,y);y+=8
+
+  let t25=0,t50=0,tRec=0
+
+  Object.entries(data).forEach(([date,v])=>{
+    t25+=0; // cumul déjà fait par période
+    tRec+=v.recup||0
+  })
+
+  Object.values(reports).forEach(r=>{
+    t25+=0; // inclus dans reports
+  })
+
+  const finalNet = reports[Math.max(...Object.keys(reports))] || 0
+
+  pdf.text(`Solde annuel net : ${finalNet.toFixed(2)} h`,10,y);y+=10
+
+  pdf.text("Validation / Signature :",10,y);y+=10
+  pdf.rect(10,y,90,20)
+
+  y+=30
+  pdf.setFontSize(8)
+  pdf.text(
+    "Bilan annuel généré automatiquement.\nValeur indicative – documents officiels seuls font foi.",
+    10,y
+  )
+
+  pdf.save(`annuel_${currentSuffix}.pdf`)
+}
+function exportPeriodPDF(){
+  const { jsPDF } = window.jspdf
+  const pdf = new jsPDF()
+
+  const period = getCurrentPeriod()
+  if(!period){
+    alert("❌ Aucune période active")
+    return
+  }
+
+  const title = "Compteur annuel d’heures – Récapitulatif de période"
 
   let y = 15
   pdf.setFontSize(14)
@@ -1221,30 +1351,128 @@ function exportMonthlyPDF(){
   y += 10
   pdf.setFontSize(10)
 
-  let totalExtra = 0
-  let totalRecup = 0
-  let totalAbs = 0
+  pdf.text(
+    `Période : ${period.start.toLocaleDateString()} → ${
+      period.end.getFullYear() === 2099
+        ? "en cours"
+        : period.end.toLocaleDateString()
+    }`,
+    10, y
+  )
+
+  y += 6
+  pdf.text(`Base hebdomadaire : ${BASE_HEBDO} h`, 10, y)
+
+  y += 6
+  pdf.text(
+    `Statut : ${locks[period.index] ? "🔒 Verrouillée" : "🔓 Modifiable"}`,
+    10, y
+  )
+
+  y += 8
+  pdf.line(10, y, 200, y)
+  y += 6
+
+  // 🔢 Données hebdomadaires
+  let weeks = {}
+  let absences = {}
+  let recups = {}
+  let feries = {}
+
   Object.entries(data).forEach(([date, v])=>{
-  const d = new Date(date)
+    const d = new Date(date)
+    if(d < period.start || d > period.end) return
 
-  // uniquement le mois affiché
-  if(
-    d.getFullYear() === viewYear &&
-    d.getMonth() === viewMonth
-  ){
-    totalExtra += v.extra || 0
-    totalRecup += v.recup || 0
-    totalAbs += v.absent || 0
-  }
-})
-  y += 5
-  pdf.text(`Total heures sup : ${totalExtra.toFixed(2)} h`, 10, y)
-  y += 6
-  pdf.text(`Total récupération : ${totalRecup.toFixed(2)} h`, 10, y)
-  y += 6
-  pdf.text(`Total absences : ${totalAbs.toFixed(2)} h`, 10, y)
+    const day = d.getDay()
+    const isoDay = day === 0 ? 7 : day
+    const monday = new Date(d)
+    monday.setDate(monday.getDate() - (isoDay - 1))
+    const wk = dateKeyLocal(monday)
 
-  pdf.save(`heures_sup_${monthName}_${viewYear}.pdf`)
+    weeks[wk] = (weeks[wk] || 0) + (v.extra || 0)
+    recups[wk] = (recups[wk] || 0) + (v.recup || 0)
+
+    if(day !== 0 && day !== 6){
+      absences[wk] = (absences[wk] || 0) + (v.absent || 0)
+    }
+
+    if(specialDays[date] === "ferie"){
+      feries[wk] = (feries[wk] || 0) + DAILY_WORK_HOURS
+    }
+  })
+
+  let total25 = 0
+  let total50 = 0
+  let totalRecup = 0
+
+  Object.keys(weeks).sort().forEach(week=>{
+    const base = Math.max(
+      0,
+      BASE_HEBDO - (absences[week] || 0) - (recups[week] || 0)
+    )
+    const total = base + weeks[week]
+
+    let h25 = 0
+    let h50 = 0
+
+    if(total > BASE_HEBDO){
+      h25 = Math.min(total, BASE_HEBDO + 8) - BASE_HEBDO
+    }
+    if(total > BASE_HEBDO + 8){
+      h50 = total - (BASE_HEBDO + 8)
+    }
+
+    total25 += Math.max(0, h25)
+    total50 += Math.max(0, h50)
+    totalRecup += recups[week] || 0
+
+    const d = new Date(week)
+    pdf.text(
+      `Semaine du ${d.toLocaleDateString()} : ${h25.toFixed(2)}h à 25% / ${h50.toFixed(2)}h à 50%`,
+      10,
+      y
+    )
+    y += 6
+
+    if(y > 270){
+      pdf.addPage()
+      y = 15
+    }
+  })
+
+  const reportPrev = getLastValidReport(period.index)
+  const brut = total25 * 1.25 + total50 * 1.5 + reportPrev
+  const net = brut - totalRecup
+
+  y += 6
+  pdf.line(10, y, 200, y)
+  y += 8
+
+  pdf.text(`Total 25 % : ${total25.toFixed(2)} h`, 10, y); y+=6
+  pdf.text(`Total 50 % : ${total50.toFixed(2)} h`, 10, y); y+=6
+  pdf.text(`Récupérations : ${totalRecup.toFixed(2)} h`, 10, y); y+=6
+  pdf.text(`Report précédent : ${reportPrev.toFixed(2)} h`, 10, y); y+=6
+
+  pdf.setFontSize(12)
+  pdf.text(`Solde net de période : ${net.toFixed(2)} h`, 10, y)
+  y += 12
+
+  pdf.setFontSize(10)
+  pdf.text("Validation / Signature :", 10, y)
+  y += 10
+  pdf.rect(10, y, 90, 20)
+
+  y += 30
+  pdf.setFontSize(8)
+  pdf.text(
+    "Document généré automatiquement à titre informatif.\nNe constitue pas un bulletin de paie.",
+    10,
+    y
+  )
+
+  pdf.save(
+    `periode_${period.start.toISOString().slice(0,10)}_${currentSuffix}.pdf`
+  )
 }
 function shouldShowAnnualClosure() {
   if (!annualDate) return false;
