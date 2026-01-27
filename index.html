@@ -1227,10 +1227,9 @@ function exportMonthlyFullPDF(){
 const period = getCurrentPeriod();
 if(period){
   pdf.text(
-   pdf.text(
-  "Période comptable : période active au moment de l’export",
-  10, y
-);
+    "Période comptable : période active au moment de l’export",
+    10, y
+  );
   y += 6;
 }
   pdf.line(10, y, 200, y)
