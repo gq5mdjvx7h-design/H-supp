@@ -1075,66 +1075,75 @@ input.click()
 function confirmImportJSON(){loadJSON(jsonArea.value);closeJSONPopup()}
 
 function loadJSON(text){
-  let obj
+  let obj;
+
+  // 1️⃣ Parsing sécurisé
   try {
-    obj = JSON.parse(text)
+    obj = JSON.parse(text);
   } catch(e){
-      // ✅ Vérification version
-  if(obj.version !== 1){
-    alert("❌ Version de sauvegarde incompatible")
-    return
+    alert("❌ JSON invalide");
+    return;
   }
 
-  // ✅ Vérification exercice
+  // 2️⃣ Vérification version
+  if(obj.version !== 1){
+    alert("❌ Version de sauvegarde incompatible");
+    return;
+  }
+
+  // 3️⃣ Vérification exercice (ANNÉE)
   if(obj.exercise && String(obj.exercise) !== String(currentSuffix)){
     const ok = confirm(
       `⚠️ Ce fichier appartient à l’exercice ${obj.exercise}.\n\n` +
       `Voulez-vous basculer automatiquement dessus ?`
-    )
-    if(!ok) return
+    );
+    if(!ok) return;
 
-    localStorage.setItem("ACTIVE_YEAR_SUFFIX", obj.exercise)
-    location.reload()
-    return
-  }
-    alert("❌ JSON invalide")
-    return
+    localStorage.setItem("ACTIVE_YEAR_SUFFIX", obj.exercise);
+    location.reload();
+    return;
   }
 
+  // 4️⃣ Vérification contenu minimal
   if(!obj.data || !obj.closures){
-  alert("❌ Sauvegarde invalide ou incomplète")
-  return
-}
-if(!confirm("⚠️ Cette action va remplacer les données de l’exercice en cours.\n\nContinuer ?")){
-  return
-}
+    alert("❌ Sauvegarde invalide ou incomplète");
+    return;
+  }
 
-  data = obj.data
-  closures = obj.closures
-  reports = obj.reports
-  locks = obj.locks || {}
-  periodMeta = obj.periodMeta || {}
-  exerciseStart = obj.exerciseStart || ""
-  annualDate = obj.annualDate || ""
-  specialDays = obj.specialDays || {}
+  // 5️⃣ Confirmation utilisateur
+  if(!confirm(
+    "⚠️ Cette action va remplacer les données de l’exercice en cours.\n\nContinuer ?"
+  )){
+    return;
+  }
 
-  BASE_HEBDO = Number(obj.BASE_HEBDO) || 35
-  annualRate = Number(obj.annualRate) || 10
+  // 6️⃣ Import réel (SANS RISQUE D’ÉCRASER UNE AUTRE ANNÉE)
+  data = obj.data;
+  closures = obj.closures;
+  reports = obj.reports || {};
+  locks = obj.locks || {};
+  periodMeta = obj.periodMeta || {};
+  exerciseStart = obj.exerciseStart || "";
+  annualDate = obj.annualDate || "";
+  specialDays = obj.specialDays || {};
 
-  // 🔐 stockage par exercice (important)
-  localStorage.setItem(STORAGE.data, JSON.stringify(data))
-  localStorage.setItem(STORAGE.closures, JSON.stringify(closures))
-  localStorage.setItem(STORAGE.reports, JSON.stringify(reports))
-  localStorage.setItem(STORAGE.locks, JSON.stringify(locks))
-  localStorage.setItem(STORAGE.periodMeta, JSON.stringify(periodMeta))
-  localStorage.setItem(STORAGE.exerciseStart, exerciseStart)
-  localStorage.setItem(STORAGE.annualDate, annualDate)
-  localStorage.setItem(STORAGE.specialDays, JSON.stringify(specialDays))
-  localStorage.setItem("BASE_HEBDO_" + currentSuffix, BASE_HEBDO)
-  localStorage.setItem('ANNUAL_RATE_' + currentSuffix, annualRate);
+  BASE_HEBDO = Number(obj.BASE_HEBDO) || 35;
+  annualRate = Number(obj.annualRate) || 10;
 
-  update()
-  alert("✅ Import complet réussi")
+  // 7️⃣ Sauvegarde STRICTEMENT sur l’exercice actif
+  localStorage.setItem(STORAGE.data, JSON.stringify(data));
+  localStorage.setItem(STORAGE.closures, JSON.stringify(closures));
+  localStorage.setItem(STORAGE.reports, JSON.stringify(reports));
+  localStorage.setItem(STORAGE.locks, JSON.stringify(locks));
+  localStorage.setItem(STORAGE.periodMeta, JSON.stringify(periodMeta));
+  localStorage.setItem(STORAGE.exerciseStart, exerciseStart);
+  localStorage.setItem(STORAGE.annualDate, annualDate);
+  localStorage.setItem(STORAGE.specialDays, JSON.stringify(specialDays));
+  localStorage.setItem("BASE_HEBDO_" + currentSuffix, BASE_HEBDO);
+  localStorage.setItem("ANNUAL_RATE_" + currentSuffix, annualRate);
+
+  update();
+  alert("✅ Import complet réussi");
 }
 
 function closeJSONPopup(){popupJSON.style.display = "none"}
