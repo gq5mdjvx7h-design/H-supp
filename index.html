@@ -34,6 +34,15 @@ body[data-theme="dark"] textarea{
   color:#fff;
   border:1px solid #444;
 }
+/* 🌙 FIX iOS — options select illisibles en mode sombre */
+body[data-theme="dark"] option{
+  background-color:#1e1e1e;
+  color:#ffffff;
+}
+
+body[data-theme="dark"] .month-nav select{
+  font-weight:600;
+}
 /* PARTIE 1 — configuration repliable */
 .section summary{
   cursor:pointer;
@@ -343,7 +352,18 @@ button,input,select,textarea{width:100%;padding:8px;margin:5px 0}
 <button onclick="closeJSONPopup()">Fermer</button>
 </div>
 </div>
+/* 🛠️ FIX SAFARI iOS — select écrasés après <details> */
+.month-nav{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
 
+.month-nav select{
+  width:100% !important;
+  min-width:0;
+  flex:1 1 0;
+}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
 let midnightTimer = null
@@ -1647,9 +1667,23 @@ function showToast(){
     toast.style.opacity = "0"
   }, 3000)
 }
+// 🛠️ FIX Safari iOS — reflow après fermeture de Configuration
+document.querySelectorAll("details.section").forEach(d=>{
+  d.addEventListener("toggle",()=>{
+    if(!d.open){
+      const nav = document.querySelector(".month-nav")
+      if(!nav) return
+      nav.style.display = "none"
+      requestAnimationFrame(()=>{
+        nav.style.display = "grid"
+      })
+    }
+  })
+})
 initSelectors()
 buildPeriods()
 autoSwitchPeriodAtMidnight()
+
 function openLegalPopup(){
   document.getElementById("popupLegal").style.display = "flex";
 }
