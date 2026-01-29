@@ -275,8 +275,6 @@ textarea{
     <button onclick="openClosures()">📅 Définir / modifier les clôtures</button>
     <select id="periodSelect"></select>
     <p id="periodInfo"></p>
-
-    <button onclick="toggleLock()">🔒 Verrouiller / 🔓 Déverrouiller la période</button>
     <p id="lockInfo"></p>
 
     <div id="rateContainer"></div>
@@ -763,21 +761,6 @@ function getCurrentPeriod(){
   }
   return null
 }
-const banner = document.getElementById("activePeriodBanner")
-
-if(period){
-  const start = period.start.toLocaleDateString()
-  const end = period.end.getFullYear() === 2099
-    ? "en cours"
-    : period.end.toLocaleDateString()
-
-  banner.innerHTML = `
-    📘 Période ${period.index + 1} : ${start} → ${end}
-    ${locks[period.index] ? "🔒" : ""}
-  `
-} else {
-  banner.innerHTML = ""
-}
 function ensureReportsUpTo(index){
   for(let i = 0; i < index; i++){
     if(reports[i] === undefined){
@@ -1068,6 +1051,10 @@ function closeNotice(){
   document.getElementById("popupNotice").style.display = "none";
 }
 function openPopup(date){
+  if(!exerciseStart){
+  alert("Veuillez définir la date de début d’exercice avant d’utiliser le calendrier.")
+  return
+}
   if(locks[currentPeriodIndex]){alert("🔒 Cette période est verrouillée");return}
 
   selectedDate = date
@@ -1188,6 +1175,7 @@ function updateSaveBadges(){
 fileEl.textContent = file
   ? "💾 Sauvegarde fichier : " + new Date(file).toLocaleString()
   : "💾 Sauvegarde fichier : —"
+  }
 function confirmImportJSON(){loadJSON(jsonArea.value);closeJSONPopup()}
 
 function loadJSON(text){
@@ -1321,7 +1309,19 @@ function update(){
   applyConfigLock()
   updateSaveBadges()
 }
+const period = getCurrentPeriod()
+const banner = document.getElementById("activePeriodBanner")
 
+if(period){
+  const start = period.start.toLocaleDateString()
+  const end = period.end.getFullYear() === 2099
+    ? "en cours"
+    : period.end.toLocaleDateString()
+
+  banner.innerHTML = `📘 Période ${period.index + 1} : ${start} → ${end} ${locks[period.index] ? "🔒" : ""}`
+} else {
+  banner.innerHTML = ""
+}
 monthSelect.onchange = () => {
   viewMonth = +monthSelect.value;
   update(); // 🔥 recalcul complet (calendrier + soldes + clôture annuelle)
