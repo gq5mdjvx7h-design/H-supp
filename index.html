@@ -1109,16 +1109,6 @@ function closeNotice(){
   document.getElementById("popupNotice").style.display = "none";
 }
 function openPopup(date){
-
-  // ⚠️ Alerte informative uniquement (NE BLOQUE PLUS)
-  if(!exerciseStart){
-    alert("⚠️ Pensez à définir la date de début d’exercice dans la configuration.")
-  }
-
-  if(locks[currentPeriodIndex]){
-    alert("🔒 Cette période est verrouillée.\nVous pouvez consulter les jours mais pas les modifier.")
-  }
-
   selectedDate = date
 
   // 🎌 FÉRIÉ = absence forcée 7h
