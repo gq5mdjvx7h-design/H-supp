@@ -503,7 +503,6 @@ function openYearsPopup(){
 }
 function saveManual(){
   if(!selectedDate) return
-  if(locks[currentPeriodIndex]) return
 
   if(!data[selectedDate]){
     data[selectedDate] = { extra:0, recup:0, absent:0 }
@@ -513,7 +512,8 @@ function saveManual(){
   data[selectedDate].recup = Number(manualRecup.value) || 0
 
   if(isAbsent.checked){
-    data[selectedDate].absent = Number(absentHours.value) || DAILY_WORK_HOURS
+    data[selectedDate].absent =
+      Number(absentHours.value) || DAILY_WORK_HOURS
   } else {
     data[selectedDate].absent = 0
   }
@@ -543,10 +543,11 @@ function confirmSwitchYear(){
   location.reload()
 }
 function addRecup(h){
-  if(locks[currentPeriodIndex]) return
   if(!data[selectedDate]) data[selectedDate]={extra:0,recup:0}
 
-  const newVal = Math.round((data[selectedDate].recup + h) * 4) / 4
+  const newVal =
+    Math.round((data[selectedDate].recup + h) * 4) / 4
+
   data[selectedDate].recup = ALLOW_RECUP_FREE
     ? newVal
     : Math.min(newVal, data[selectedDate].extra)
@@ -1133,10 +1134,11 @@ function openPopup(date){
 function closePopup(){document.getElementById("popup").style.display="none";update()}
 
 function addExtra(h){
-  if(locks[currentPeriodIndex]) return
   if(!data[selectedDate]) data[selectedDate]={extra:0,recup:0}
-  data[selectedDate].extra=Math.round((data[selectedDate].extra+h)*4)/4
-  save();closePopup()
+  data[selectedDate].extra =
+    Math.round((data[selectedDate].extra + h) * 4) / 4
+  save()
+  closePopup()
 }
 
 
