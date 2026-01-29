@@ -1131,7 +1131,11 @@ function openPopup(date){
   document.getElementById("popup").style.display = "flex"
 }
 
-function closePopup(){document.getElementById("popup").style.display="none";update()}
+function closePopup(){
+  document.getElementById("popup").style.display = "none";
+  selectedDate = "";   // 🔥 FIX CRITIQUE
+  update();
+}
 
 function addExtra(h){
   if(!data[selectedDate]) data[selectedDate]={extra:0,recup:0}
