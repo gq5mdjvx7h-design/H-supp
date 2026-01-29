@@ -705,7 +705,10 @@ function deletePeriod(i){
 }
 function buildPeriods(){
   const base = getBaseStartDate();
-  if(!base) return;
+  if(!base){
+    update(); // 🔥 afficher le calendrier même sans exercice
+    return;
+  }
 
   periodSelect.innerHTML = "";
 
