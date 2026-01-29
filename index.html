@@ -784,61 +784,69 @@ function ensureReportsUpTo(index){
   }
 }
 function generateCalendar(){
-calendar.innerHTML=""
-const firstDay = new Date(viewYear, viewMonth, 1).getDay()
-const offset = firstDay === 0 ? 6 : firstDay - 1
-const days=new Date(viewYear,viewMonth+1,0).getDate()
-for(let i=0;i<offset;i++)calendar.appendChild(document.createElement("div"))
-const period=getCurrentPeriod()
-let pStart = null, pEnd = null
-if(period){
-  pStart = new Date(period.start)
-  pEnd = new Date(period.end)
-  pStart.setHours(0,0,0,0)
-  pEnd.setHours(0,0,0,0)
-}
-for(let d=1;d<=days;d++){
-const key=`${viewYear}-${String(viewMonth+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`
-const div=document.createElement("div")
-div.className="day"
-if(period){
-  const dk = new Date(key)
-  if(pStart && dk >= pStart && dk <= pEnd){
-    div.classList.add("in-period")
+  calendar.innerHTML = ""
+
+  const firstDay = new Date(viewYear, viewMonth, 1).getDay()
+  const offset = firstDay === 0 ? 6 : firstDay - 1
+  const days = new Date(viewYear, viewMonth + 1, 0).getDate()
+
+  for(let i = 0; i < offset; i++){
+    calendar.appendChild(document.createElement("div"))
   }
-}
-}
-const day = data[key] || { extra:0, recup:0, absent:0 }
-let html = `<strong>${d}</strong>`
 
-if(day.extra){
-  html += `<small style="color:#1976d2">+${day.extra}h</small>`
-}
+  const period = getCurrentPeriod()
+  let pStart = null, pEnd = null
 
-if(day.recup){
-  html += `<small style="color:#ef6c00">-${day.recup}h</small>`
-}
+  if(period){
+    pStart = new Date(period.start)
+    pEnd = new Date(period.end)
+    pStart.setHours(0,0,0,0)
+    pEnd.setHours(0,0,0,0)
+  }
 
-// 🎌 Jour férié affiché même sans absence
-if (specialDays[key] === "ferie") {
-  html += `<small style="color:#0d47a1;font-weight:bold">🎌 Férié</small>`
-  div.style.background = "#e3f2fd"
-  div.style.border = "2px dashed #1976d2"
-}
+  for(let d = 1; d <= days; d++){
+    const key = `${viewYear}-${String(viewMonth+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`
+    const div = document.createElement("div")
+    div.className = "day"
 
-// ❌ Absence classique (hors férié)
-else if (day.absent) {
-  html += `<small style="color:#c62828;font-weight:bold">ABS ${day.absent}h</small>`
-  div.style.background = "#ffebee"
-  div.style.border = "2px solid #c62828"
-}
+    if(period){
+      const dk = new Date(key)
+      if(pStart && dk >= pStart && dk <= pEnd){
+        div.classList.add("in-period")
+      }
+    }
 
-div.innerHTML = html
-if(key === dateKeyLocal(new Date()))
-div.classList.add("today")
-div.onclick=()=>openPopup(key)
-calendar.appendChild(div)
-}
+    const day = data[key] || { extra:0, recup:0, absent:0 }
+    let html = `<strong>${d}</strong>`
+
+    if(day.extra){
+      html += `<small style="color:#1976d2">+${day.extra}h</small>`
+    }
+
+    if(day.recup){
+      html += `<small style="color:#ef6c00">-${day.recup}h</small>`
+    }
+
+    if (specialDays[key] === "ferie") {
+      html += `<small style="color:#0d47a1;font-weight:bold">🎌 Férié</small>`
+      div.style.background = "#e3f2fd"
+      div.style.border = "2px dashed #1976d2"
+    }
+    else if (day.absent) {
+      html += `<small style="color:#c62828;font-weight:bold">ABS ${day.absent}h</small>`
+      div.style.background = "#ffebee"
+      div.style.border = "2px solid #c62828"
+    }
+
+    div.innerHTML = html
+
+    if(key === dateKeyLocal(new Date())){
+      div.classList.add("today")
+    }
+
+    div.onclick = () => openPopup(key)
+    calendar.appendChild(div)
+  }
 }
 function getLastValidReport(index) {
   for (let i = index - 1; i >= 0; i--) {
@@ -1135,13 +1143,17 @@ function exportJSON(){
 
   // 🌍 iOS + Android récents → feuille de partage
   if (navigator.canShare && navigator.canShare({ files: [new File([blob], filename)] })) {
-    const file = new File([blob], filename, { type: "application/json" })
-    navigator.share({
-      files: [file],
-      title: "Sauvegarde heures supplémentaires"
-    })
-    return
-  }
+  const stamp = new Date().toISOString()
+  localStorage.setItem("FILE_SAVE_DATE_" + currentSuffix, stamp)
+  updateSaveBadges()
+
+  const file = new File([blob], filename, { type: "application/json" })
+  navigator.share({
+    files: [file],
+    title: "Sauvegarde heures supplémentaires"
+  })
+  return
+}
 
   // 💻 PC / Mac / anciens navigateurs → téléchargement
   const url = URL.createObjectURL(blob)
@@ -1340,7 +1352,6 @@ function update(){
     } else {
       banner.innerHTML = ""
     }
-  }
 }
 monthSelect.onchange = () => {
   viewMonth = +monthSelect.value;
@@ -1381,7 +1392,9 @@ exerciseStartInput.onchange = ()=>{
   localStorage.setItem(STORAGE.exerciseStart, exerciseStart);
   buildPeriods();
 };
-
+if(!localStorage.getItem("AUTO_SAVE_DATE_" + currentSuffix)){
+  autoBackup()
+}
   // ===== FONCTION DE VÉRIFICATION DU MOIS EXACT =====
 function exportMonthlyFullPDF(){
   const { jsPDF } = window.jspdf
