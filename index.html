@@ -523,7 +523,11 @@ function confirmSwitchYear(){
   localStorage.setItem("ACTIVE_YEAR_SUFFIX", val)
   location.reload()
 }
-
+function addRecup(h){
+  if(locks[currentPeriodIndex]) return
+  if(!data[selectedDate]) data[selectedDate]={extra:0,recup:0}
+  ...
+}
 function getExistingYears(){
   const years = new Set()
 
