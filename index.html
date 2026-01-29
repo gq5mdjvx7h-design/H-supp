@@ -555,6 +555,13 @@ function addRecup(h){
   save()
   closePopup()
 }
+function addExtra(h){
+  if(!data[selectedDate]) data[selectedDate]={extra:0,recup:0}
+  data[selectedDate].extra =
+    Math.round((data[selectedDate].extra + h) * 4) / 4
+  save()
+  closePopup()
+}
 function getExistingYears(){
   const years = new Set()
 
@@ -1137,13 +1144,7 @@ function closePopup(){
   update();
 }
 
-function addExtra(h){
-  if(!data[selectedDate]) data[selectedDate]={extra:0,recup:0}
-  data[selectedDate].extra =
-    Math.round((data[selectedDate].extra + h) * 4) / 4
-  save()
-  closePopup()
-}
+
 
 
 
