@@ -907,23 +907,7 @@ let details = []
 let h25 = 0
 let h50 = 0
 
-  if (!period) {
-  totaux.innerHTML = `
-    <div style="
-      background:#fff3cd;
-      border:1px solid #ffeeba;
-      padding:12px;
-      border-radius:8px;
-      color:#856404;
-    ">
-      ⚠️ <b>Aucune période comptable définie</b><br>
-      Veuillez définir au moins une période de clôture pour activer le calcul du solde.
-    </div>
-  `;
-  lockInfo.textContent = "";
-  periodInfo.innerHTML = "";
-  return;
-}
+  
   if(periodMeta[period.index]?.status === "deleted"){
   totaux.innerHTML = "<i>❌ Cette période est supprimée</i>"
   return
