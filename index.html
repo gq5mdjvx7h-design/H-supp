@@ -501,7 +501,26 @@ function openYearsPopup(){
 
   document.getElementById("popupYears").style.display = "flex"
 }
+function saveManual(){
+  if(!selectedDate) return
+  if(locks[currentPeriodIndex]) return
 
+  if(!data[selectedDate]){
+    data[selectedDate] = { extra:0, recup:0, absent:0 }
+  }
+
+  data[selectedDate].extra = Number(manualExtra.value) || 0
+  data[selectedDate].recup = Number(manualRecup.value) || 0
+
+  if(isAbsent.checked){
+    data[selectedDate].absent = Number(absentHours.value) || DAILY_WORK_HOURS
+  } else {
+    data[selectedDate].absent = 0
+  }
+
+  save()
+  closePopup()
+}
 function closeYearsPopup(){
   document.getElementById("popupYears").style.display = "none"
 }
