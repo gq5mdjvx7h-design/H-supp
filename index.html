@@ -1342,7 +1342,7 @@ function update(){
   const period = getCurrentPeriod()
 
   if(banner){
-  if(period && exerciseStart){
+    if(period && exerciseStart){
       const start = period.start.toLocaleDateString()
       const end = period.end.getFullYear() === 2099
         ? "en cours"
@@ -1354,6 +1354,7 @@ function update(){
     } else {
       banner.innerHTML = ""
     }
+  }
 }
 monthSelect.onchange = () => {
   viewMonth = +monthSelect.value;
