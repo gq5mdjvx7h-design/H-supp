@@ -282,7 +282,6 @@ textarea{
 <button onclick="toggleConfigLock()">🔒 / 🔓 Verrouiller la configuration</button>
 <p id="configLockInfo"></p>
   <hr>
-<button onclick="exportJSON()">⬇️ Exporter (.json)</button>
 <button onclick="importJSON()">⬆️ Importer (.json)</button>
 <button onclick="exportMonthlyFullPDF()">📄 PDF mensuel complet</button>
 <button onclick="exportAnnualPDF()">📕 PDF annuel complet</button>
@@ -335,19 +334,19 @@ textarea{
   justify-content:space-between;
 ">
 
-  <div style="display:flex; gap:10px; flex-wrap:wrap;">
-    <button onclick="toggleLock()">
-      🔒 / 🔓 Verrouiller la période
-    </button>
+ <div style="display:flex; gap:10px; flex-wrap:wrap;">
+  <button onclick="toggleLock()">
+    🔒 / 🔓 Verrouiller la période
+  </button>
 
-  
-      background:#e8f5e9;
-      border:1px solid #2e7d32;
-      font-weight:bold;
-    ">
-      💾 Sauvegarde dans un fichier
-    </button>
-  </div>
+  <button onclick="exportJSON()" style="
+    background:#e8f5e9;
+    border:1px solid #2e7d32;
+    font-weight:bold;
+  ">
+    💾 Sauvegarde dans un fichier
+  </button>
+</div>
 <div id="saveBadges" style="
   font-size:13px;
   color:#2e7d32;
@@ -967,8 +966,6 @@ const base = Math.max(
   const net = brut - totalRecup;
 
   if(!locks[period.index]){
-    ensureReportsUpTo(period.index)
-const reportPrev = getLastValidReport(period.index)
     reports[period.index] = net;
     localStorage.setItem(STORAGE.reports, JSON.stringify(reports));
   }
