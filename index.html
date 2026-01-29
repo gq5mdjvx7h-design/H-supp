@@ -361,7 +361,7 @@ textarea{
     color:#2e7d32;
     align-self:center;
   ">
-    Sauvegarde locale automatique + sauvegarde fichier recommandée
+    Sauvegarde automatique dans l’application · Sauvegarde fichier recommandée
   </span>
 
 </div>
@@ -868,8 +868,10 @@ const reportPrev = getLastValidReport(period.index)
   periodInfo.innerHTML=`<b>Période :</b> ${period.start.toLocaleDateString()} → ${period.end.getFullYear()===2099?"en cours":period.end.toLocaleDateString()}<br>
   <b>Report précédent :</b> ${reportPrev.toFixed(2)} h`
 // 🔒 Normalisation des bornes de période
-period.start.setHours(0, 0, 0, 0)
-period.end.setHours(0, 0, 0, 0)
+const pStart = new Date(period.start)
+const pEnd = new Date(period.end)
+pStart.setHours(0,0,0,0)
+pEnd.setHours(0,0,0,0)
 // --- 1. TRAITEMENT DES DONNÉES (HEBDOMADAIRE) ---
 Object.entries(data).forEach(([date, v]) => {
 
@@ -877,7 +879,7 @@ Object.entries(data).forEach(([date, v]) => {
   const dayDate = new Date(y, m - 1, d)
   const dayOfWeek = dayDate.getDay() // 0 = dim
 
-  if (dayDate < period.start || dayDate > period.end) return
+  if (dayDate < pStart || dayDate > pEnd) return
 
 // 📅 Lundi de la semaine
 const isoDay = dayOfWeek === 0 ? 7 : dayOfWeek
@@ -1079,6 +1081,7 @@ function openPopup(date){
 function closePopup(){document.getElementById("popup").style.display="none";update()}
 
 function addExtra(h){
+  if(locks[currentPeriodIndex]) return
   if(!data[selectedDate]) data[selectedDate]={extra:0,recup:0}
   data[selectedDate].extra=Math.round((data[selectedDate].extra+h)*4)/4
   save();closePopup()
