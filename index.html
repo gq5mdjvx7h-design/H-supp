@@ -887,6 +887,17 @@ function getLastValidReport(index) {
 }
 function calculate(){
 
+  const period = getCurrentPeriod()
+  if(!period){
+    totaux.innerHTML = `
+      <div style="background:#fff3cd;border:1px solid #ffeeba;padding:12px;border-radius:8px;color:#856404">
+        ℹ️ Définissez une date de début d’exercice et des clôtures
+        pour activer les calculs.
+      </div>
+    `
+    return
+  }
+
   let weeks = {}
 let absences = {}
 let totalRecup = 0
@@ -896,7 +907,6 @@ let details = []
 let h25 = 0
 let h50 = 0
 
-  const period = getCurrentPeriod()
   if (!period) {
   totaux.innerHTML = `
     <div style="
@@ -1111,6 +1121,11 @@ function closeNotice(){
 function openPopup(date){
   selectedDate = date
 
+  // ℹ️ Info non bloquante si exercice non défini
+  if(!exerciseStart){
+    console.warn("Date de début d’exercice non définie")
+  }
+
   // 🎌 FÉRIÉ = absence forcée 7h
   if (specialDays[date] === "ferie") {
     if (!data[date]) data[date] = {extra:0, recup:0, absent:0}
@@ -1125,9 +1140,8 @@ function openPopup(date){
   absentHours.value = d.absent || 0
   isAbsent.checked = (d.absent || 0) > 0
 
-  document.getElementById("popup").style.display = "flex"
+  popup.style.display = "flex"
 }
-
 function closePopup(){
   document.getElementById("popup").style.display = "none";
   selectedDate = "";   // 🔥 FIX CRITIQUE
