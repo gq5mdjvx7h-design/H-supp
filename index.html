@@ -1101,21 +1101,20 @@ function closeNotice(){
   document.getElementById("popupNotice").style.display = "none";
 }
 function openPopup(date){
+
+  // ⚠️ Alerte informative uniquement (NE BLOQUE PLUS)
   if(!exerciseStart){
-  alert("Veuillez définir la date de début d’exercice avant d’utiliser le calendrier.")
-  return
-}
+    alert("⚠️ Pensez à définir la date de début d’exercice dans la configuration.")
+  }
+
   if(locks[currentPeriodIndex]){
-  alert("🔒 Cette période est verrouillée.\nDéverrouillez-la pour modifier les jours.")
-  return
-}
+    alert("🔒 Cette période est verrouillée.\nVous pouvez consulter les jours mais pas les modifier.")
+  }
 
   selectedDate = date
 
   // 🎌 FÉRIÉ = absence forcée 7h
-  if (
-    specialDays[date] === "ferie"
-  ) {
+  if (specialDays[date] === "ferie") {
     if (!data[date]) data[date] = {extra:0, recup:0, absent:0}
     data[date].absent = DAILY_WORK_HOURS
   }
