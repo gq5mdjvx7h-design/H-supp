@@ -272,7 +272,7 @@ textarea{
   id="baseHebdoInput"
 >
     <h2>Période comptable</h2>
-    <button onclick="openClosures()">📅 Définir / modifier les clôtures</button>
+   <button onclick="openClosures()">📅 Clôtures mensuelles</button>
     <select id="periodSelect"></select>
     <p id="periodInfo"></p>
     <p id="lockInfo"></p>
@@ -340,7 +340,7 @@ textarea{
       🔒 / 🔓 Verrouiller la période
     </button>
 
-    <button onclick="exportJSON()" style="
+  
       background:#e8f5e9;
       border:1px solid #2e7d32;
       font-weight:bold;
@@ -862,7 +862,8 @@ let h50 = 0
 }
 
   // ✅ CORRECTION IMAGE 4 : Sécurisation du reportPrev contre les valeurs NaN ou vides
-const reportPrev = getLastValidReport(period.index);
+ensureReportsUpTo(period.index)
+const reportPrev = getLastValidReport(period.index)
 
   lockInfo.textContent = locks[period.index] ? "🔒 Période verrouillée" : "🔓 Période déverrouillée"
   periodInfo.innerHTML=`<b>Période :</b> ${period.start.toLocaleDateString()} → ${period.end.getFullYear()===2099?"en cours":period.end.toLocaleDateString()}<br>
@@ -1253,21 +1254,19 @@ function loadJSON(text){
 function closeJSONPopup(){popupJSON.style.display = "none"}
 
 function autoBackup(){
-const key="AUTO_BACKUP_HS"
-const last=localStorage.getItem(key)
-const now=new Date().toISOString().slice(0,7)
-if(last===now)return
-const payload={data,closures,reports}
-const blob=new Blob([JSON.stringify(payload)],{type:"application/json"})
-const a=document.createElement("a")
-a.href=URL.createObjectURL(blob)
-a.download=`backup_heures_sup_${now}.json`
-a.click()
-localStorage.setItem(key, now)
+  const key = "AUTO_BACKUP_HS_" + currentSuffix
+  const last = localStorage.getItem(key)
+  const now = new Date().toISOString().slice(0,7)
 
-const stamp = new Date().toISOString()
-localStorage.setItem("AUTO_SAVE_DATE_" + currentSuffix, stamp)
-updateSaveBadges()
+  if(last === now) return
+
+  // ✅ sauvegarde SILENCIEUSE (localStorage uniquement)
+  localStorage.setItem(key, now)
+
+  const stamp = new Date().toISOString()
+  localStorage.setItem("AUTO_SAVE_DATE_" + currentSuffix, stamp)
+
+  updateSaveBadges()
 }
 async function importFeries(){
   const baseYear = Number(currentSuffix);
@@ -1308,19 +1307,25 @@ function update(){
   autoBackup()
   applyConfigLock()
   updateSaveBadges()
-}
-const period = getCurrentPeriod()
-const banner = document.getElementById("activePeriodBanner")
 
-if(period){
-  const start = period.start.toLocaleDateString()
-  const end = period.end.getFullYear() === 2099
-    ? "en cours"
-    : period.end.toLocaleDateString()
+  // 🔔 Bandeau période active
+  const banner = document.getElementById("activePeriodBanner")
+  const period = getCurrentPeriod()
 
-  banner.innerHTML = `📘 Période ${period.index + 1} : ${start} → ${end} ${locks[period.index] ? "🔒" : ""}`
-} else {
-  banner.innerHTML = ""
+  if(banner){
+    if(period){
+      const start = period.start.toLocaleDateString()
+      const end = period.end.getFullYear() === 2099
+        ? "en cours"
+        : period.end.toLocaleDateString()
+
+      banner.innerHTML =
+        `📘 Période ${period.index + 1} : ${start} → ${end} ` +
+        (locks[period.index] ? "🔒" : "")
+    } else {
+      banner.innerHTML = ""
+    }
+  }
 }
 monthSelect.onchange = () => {
   viewMonth = +monthSelect.value;
