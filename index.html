@@ -1083,7 +1083,10 @@ function openPopup(date){
   alert("Veuillez définir la date de début d’exercice avant d’utiliser le calendrier.")
   return
 }
-  if(locks[currentPeriodIndex]){alert("🔒 Cette période est verrouillée");return}
+  if(locks[currentPeriodIndex]){
+  alert("🔒 Cette période est verrouillée.\nDéverrouillez-la pour modifier les jours.")
+  return
+}
 
   selectedDate = date
 
@@ -1339,7 +1342,7 @@ function update(){
   const period = getCurrentPeriod()
 
   if(banner){
-    if(period){
+  if(period && exerciseStart){
       const start = period.start.toLocaleDateString()
       const end = period.end.getFullYear() === 2099
         ? "en cours"
