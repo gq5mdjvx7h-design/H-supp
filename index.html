@@ -782,13 +782,20 @@ const offset = firstDay === 0 ? 6 : firstDay - 1
 const days=new Date(viewYear,viewMonth+1,0).getDate()
 for(let i=0;i<offset;i++)calendar.appendChild(document.createElement("div"))
 const period=getCurrentPeriod()
+let pStart = null, pEnd = null
+if(period){
+  pStart = new Date(period.start)
+  pEnd = new Date(period.end)
+  pStart.setHours(0,0,0,0)
+  pEnd.setHours(0,0,0,0)
+}
 for(let d=1;d<=days;d++){
 const key=`${viewYear}-${String(viewMonth+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`
 const div=document.createElement("div")
 div.className="day"
 if(period){
 const dk=new Date(key)
-if(dk>=period.start && dk<=period.end){div.classList.add("in-period")}
+if(pStart && dk>=pStart && dk<=pEnd)
 }
 const day = data[key] || { extra:0, recup:0, absent:0 }
 let html = `<strong>${d}</strong>`
@@ -1091,12 +1098,6 @@ function addExtra(h){
   save();closePopup()
 }
 
-function addRecup(h){
-  if(!data[selectedDate]) data[selectedDate]={extra:0,recup:0}
-  const newVal = Math.round((data[selectedDate].recup+h)*4)/4
-  data[selectedDate].recup = ALLOW_RECUP_FREE ? newVal : Math.min(newVal, data[selectedDate].extra)
-  save();closePopup()
-}
 
 
 function save(){ localStorage.setItem(STORAGE.data,JSON.stringify(data)) }
