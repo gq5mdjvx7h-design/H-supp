@@ -735,8 +735,13 @@ function buildPeriods(){
   });
 
   // 👉 si aujourd’hui est après la dernière clôture
-if (foundIndex === null) {
+if (closures.length === 0) {
+  foundIndex = 0;
+} else if (foundIndex === null) {
   foundIndex = closures.length - 1;
+}
+
+foundIndex = Math.max(0, foundIndex);
 }
 
 // ✅ CORRECTIF : aucune clôture définie
@@ -1472,7 +1477,6 @@ function exportAnnualPDF(){
   const pdf = new jsPDF()
 
   let y = 15
-  let page = 1
 
   const addHeader = (title) => {
     pdf.setFontSize(14)
@@ -1619,9 +1623,12 @@ annualNet += net
   y += 30
   pdf.setFontSize(8)
   pdf.text(
-    "Bilan annuel généré automatiquement.\nDocument indicatif – ne constitue pas un bulletin de paie.",
+  "Bilan annuel généré automatiquement.\nDocument indicatif – ne constitue pas un bulletin de paie.",
+  10,
+  y
+)
 
-  pdf.save(`annuel_${currentSuffix}.pdf`)
+pdf.save(`annuel_${currentSuffix}.pdf`)
 }
 function exportPeriodPDF(){
   const { jsPDF } = window.jspdf
@@ -1648,8 +1655,6 @@ function exportPeriodPDF(){
         ? "en cours"
         : period.end.toLocaleDateString()
     }`,
-    10, y
-  )
 
   y += 6
   pdf.text(`Base hebdomadaire : ${BASE_HEBDO} h`, 10, y)
