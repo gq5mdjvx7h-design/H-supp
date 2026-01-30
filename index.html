@@ -218,7 +218,7 @@ textarea{
 
     <h4>🔒 Verrouillage</h4>
     <p>
-      Il est possible de verrouiller une période ou la configuration
+      Il est possible de verrouiller la configuration
       générale afin d’éviter toute modification involontaire.
     </p>
 
@@ -275,7 +275,6 @@ textarea{
    <button onclick="openClosures()">📅 Clôtures mensuelles</button>
     <select id="periodSelect"></select>
     <p id="periodInfo"></p>
-    <p id="lockInfo"></p>
 
     <div id="rateContainer"></div>
 <hr>
@@ -334,7 +333,7 @@ textarea{
   justify-content:space-between;
 ">
 
- <div style="display:flex; gap:10px; flex-wrap:
+ <div style="display:flex; gap:10px; flex-wrap:wrap;">
   <button onclick="exportJSON()" style="
     background:#e8f5e9;
     border:1px solid #2e7d32;
@@ -450,7 +449,6 @@ function resetCurrentExercise(){
     "DATA_REPORT_",
     "CLOSURES_REPORT_",
     "REPORTS_REPORT_",
-    "LOCKS_REPORT_",
     "PERIOD_META_REPORT_",
     "ANNUAL_DATE_",
     "SPECIAL_DAYS_",
@@ -605,7 +603,6 @@ const periodSelect=document.getElementById("periodSelect")
 const calendar=document.getElementById("calendar")
 const periodInfo=document.getElementById("periodInfo")
 const totaux=document.getElementById("totaux")
-const lockInfo = document.getElementById("lockInfo")
 const popup = document.getElementById("popup")
 const popupDate = document.getElementById("popupDate")
 const manualExtra = document.getElementById("manualExtra")
@@ -905,7 +902,6 @@ let h50 = 0
 ensureReportsUpTo(period.index)
 const reportPrev = getLastValidReport(period.index)
 
-  lockInfo.textContent = locks[period.index] ? "🔒 Période verrouillée" : "🔓 Période déverrouillée"
   periodInfo.innerHTML=`<b>Période :</b> ${period.start.toLocaleDateString()} → ${period.end.getFullYear()===2099?"en cours":period.end.toLocaleDateString()}<br>
   <b>Report précédent :</b> ${reportPrev.toFixed(2)} h`
 // 🔒 Normalisation des bornes de période
@@ -1139,7 +1135,6 @@ function exportJSON(){
     data,
     closures,
     reports,
-    locks,
     periodMeta,
     exerciseStart,
     annualDate,
@@ -1263,7 +1258,6 @@ function loadJSON(text){
   data = obj.data;
   closures = obj.closures;
   reports = obj.reports || {};
-  locks = obj.locks || {};
   periodMeta = obj.periodMeta || {};
   exerciseStart = obj.exerciseStart || "";
   annualDate = obj.annualDate || "";
@@ -1276,7 +1270,6 @@ function loadJSON(text){
   localStorage.setItem(STORAGE.data, JSON.stringify(data));
   localStorage.setItem(STORAGE.closures, JSON.stringify(closures));
   localStorage.setItem(STORAGE.reports, JSON.stringify(reports));
-  localStorage.setItem(STORAGE.locks, JSON.stringify(locks));
   localStorage.setItem(STORAGE.periodMeta, JSON.stringify(periodMeta));
   localStorage.setItem(STORAGE.exerciseStart, exerciseStart);
   localStorage.setItem(STORAGE.annualDate, annualDate);
@@ -1290,21 +1283,6 @@ function loadJSON(text){
 
 function closeJSONPopup(){popupJSON.style.display = "none"}
 
-function autoBackup(){
-  const key = "AUTO_BACKUP_HS_" + currentSuffix
-  const last = localStorage.getItem(key)
-  const now = new Date().toISOString().slice(0,7)
-
-  if(last === now) return
-
-  // ✅ sauvegarde SILENCIEUSE (localStorage uniquement)
-  localStorage.setItem(key, now)
-
-  const stamp = new Date().toISOString()
-  localStorage.setItem("AUTO_SAVE_DATE_" + currentSuffix, stamp)
-
-  updateSaveBadges()
-}
 async function importFeries(){
   const baseYear = Number(currentSuffix);
   const years = [baseYear - 1, baseYear, baseYear + 1];
@@ -1341,7 +1319,6 @@ function update(){
   checkExerciseStartAlert()
   generateCalendar()
   calculate()
-  autoBackup()
   applyConfigLock()
   updateSaveBadges()
 
@@ -1357,7 +1334,7 @@ function update(){
         : period.end.toLocaleDateString()
 
       banner.innerHTML =
-        `📘 Période ${period.index + 1} : ${start} → $
+  `📘 Période ${period.index + 1} : ${start} → ${end}`;
     } else {
       banner.innerHTML = ""
     }
@@ -1552,7 +1529,7 @@ function exportAnnualPDF(){
 
     pdf.setFontSize(9)
     pdf.text(
-      `Statut : ${locks[index] ? "Verrouillée" : "Modifiable"} | Base : ${BASE_HEBDO} h`,
+    `Base hebdomadaire : ${BASE_HEBDO} h`
       10, y
     )
     y += 5
@@ -1684,7 +1661,7 @@ function exportPeriodPDF(){
 
   y += 6
   pdf.text(
-    `Statut : ${locks[period.index] ? "🔒 Verrouillée" : "🔓 Modifiable"}`,
+    
     10, y
   )
 
