@@ -334,11 +334,7 @@ textarea{
   justify-content:space-between;
 ">
 
- <div style="display:flex; gap:10px; flex-wrap:wrap;">
-  <button onclick="toggleLock()">
-    🔒 / 🔓 Verrouiller la période
-  </button>
-
+ <div style="display:flex; gap:10px; flex-wrap:
   <button onclick="exportJSON()" style="
     background:#e8f5e9;
     border:1px solid #2e7d32;
@@ -579,7 +575,6 @@ const STORAGE = {
   data: "DATA_REPORT_" + currentSuffix,
   closures: "CLOSURES_REPORT_" + currentSuffix,
   reports: "REPORTS_REPORT_" + currentSuffix,
-  locks: "LOCKS_REPORT_" + currentSuffix,
   annualDate: "ANNUAL_DATE_" + currentSuffix,
   specialDays: "SPECIAL_DAYS_" + currentSuffix,
   exerciseStart: "EXERCISE_START_" + currentSuffix
@@ -591,7 +586,7 @@ STORAGE.periodMeta = "PERIOD_META_REPORT_" + currentSuffix;
 let data = JSON.parse(localStorage.getItem(STORAGE.data)) || {};
 let closures = JSON.parse(localStorage.getItem(STORAGE.closures)) || [];
 let reports = JSON.parse(localStorage.getItem(STORAGE.reports)) || {};
-let locks = JSON.parse(localStorage.getItem(STORAGE.locks)) || {};
+
 let annualDate = localStorage.getItem(STORAGE.annualDate) || "";
 let annualRate =
   Number(localStorage.getItem("ANNUAL_RATE_" + currentSuffix)) || 10;
@@ -759,13 +754,6 @@ if (closures.length === 0) {
   update();
 }
 
-
-function toggleLock(){
-  const i=currentPeriodIndex
-  locks[i]=!locks[i]
-  localStorage.setItem(STORAGE.locks,JSON.stringify(locks))
-  update()
-}
 function toggleConfigLock(){
   const key = "CONFIG_LOCK_" + currentSuffix;
   const locked = localStorage.getItem(key) === "true";
@@ -1018,11 +1006,8 @@ const base = Math.max(
   const brut50 = h50 * 1.5;
   const brut = brut25 + brut50 + reportPrev;
   const net = brut - totalRecup;
-
-  if(!locks[period.index]){
-    reports[period.index] = net;
-    localStorage.setItem(STORAGE.reports, JSON.stringify(reports));
-  }
+reports[period.index] = net;
+localStorage.setItem(STORAGE.reports, JSON.stringify(reports));
 
   // --- 3. AFFICHAGE HTML ---
   totaux.innerHTML = `
@@ -1136,7 +1121,14 @@ function closePopup(){
 
 
 
-function save(){ localStorage.setItem(STORAGE.data,JSON.stringify(data)) }
+function save(){
+  localStorage.setItem(STORAGE.data, JSON.stringify(data));
+
+  const stamp = new Date().toISOString();
+  localStorage.setItem("AUTO_SAVE_DATE_" + currentSuffix, stamp);
+
+  updateSaveBadges();
+}
 
 function isIOS(){return /iPad|iPhone|iPod/.test(navigator.userAgent)}
 
@@ -1365,8 +1357,7 @@ function update(){
         : period.end.toLocaleDateString()
 
       banner.innerHTML =
-        `📘 Période ${period.index + 1} : ${start} → ${end} ` +
-        (locks[period.index] ? "🔒" : "")
+        `📘 Période ${period.index + 1} : ${start} → $
     } else {
       banner.innerHTML = ""
     }
