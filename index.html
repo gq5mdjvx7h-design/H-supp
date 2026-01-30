@@ -216,12 +216,12 @@ textarea{
       La période suivante débute automatiquement le lundi.
     </p>
 
-    <h4>🔒 Verrouillage</h4>
-    <p>
-      Il est possible de verrouiller la configuration
-      générale afin d’éviter toute modification involontaire.
-    </p>
-
+ <h4>🔒 Verrouillage de la configuration</h4>
+<p>
+  Il est possible de verrouiller les paramètres généraux
+  (date de début, base hebdomadaire, clôture annuelle)
+  afin d’éviter toute modification involontaire.
+</p>
     <h4>💾 Sauvegarde</h4>
     <p>
       Les données sont enregistrées localement sur l’appareil utilisé.
@@ -529,7 +529,6 @@ function confirmSwitchYear(){
     localStorage.setItem(baseKey, JSON.stringify({}))
     localStorage.setItem("CLOSURES_REPORT_" + val, JSON.stringify([]))
     localStorage.setItem("REPORTS_REPORT_" + val, JSON.stringify({}))
-    localStorage.setItem("LOCKS_REPORT_" + val, JSON.stringify({}))
     localStorage.setItem("PERIOD_META_REPORT_" + val, JSON.stringify({}))
   }
 
@@ -1379,9 +1378,7 @@ exerciseStartInput.onchange = ()=>{
   localStorage.setItem(STORAGE.exerciseStart, exerciseStart);
   buildPeriods();
 };
-if(!localStorage.getItem("AUTO_SAVE_DATE_" + currentSuffix)){
-  autoBackup()
-}
+
   // ===== FONCTION DE VÉRIFICATION DU MOIS EXACT =====
 function exportMonthlyFullPDF(){
   const { jsPDF } = window.jspdf
@@ -1529,9 +1526,9 @@ function exportAnnualPDF(){
 
     pdf.setFontSize(9)
     pdf.text(
-    `Base hebdomadaire : ${BASE_HEBDO} h`
-      10, y
-    )
+  `Base hebdomadaire : ${BASE_HEBDO} h`,
+  10, y
+)
     y += 5
 
     let weeks = {}
@@ -1623,8 +1620,6 @@ annualNet += net
   pdf.setFontSize(8)
   pdf.text(
     "Bilan annuel généré automatiquement.\nDocument indicatif – ne constitue pas un bulletin de paie.",
-    10, y
-  )
 
   pdf.save(`annuel_${currentSuffix}.pdf`)
 }
