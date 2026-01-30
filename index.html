@@ -741,18 +741,18 @@ if (closures.length === 0) {
   foundIndex = closures.length - 1;
 }
 
-foundIndex = Math.max(0, foundIndex);
-}
-
-// ✅ CORRECTIF : aucune clôture définie
 if (closures.length === 0) {
   foundIndex = 0;
+} else if (foundIndex === null) {
+  foundIndex = closures.length - 1;
 }
 
-  currentPeriodIndex = foundIndex;
-  periodSelect.selectedIndex = foundIndex;
+foundIndex = Math.max(0, foundIndex);
 
-  update();
+currentPeriodIndex = foundIndex;
+periodSelect.selectedIndex = foundIndex;
+
+update();
 }
 
 function toggleConfigLock(){
@@ -963,7 +963,6 @@ Object.entries(weeks).forEach(([week, extra]) => {
   const absent = absences[week] || 0;
   const recup = recups[week] || 0;
 
-  const ferieHours = feries[week] || 0;
 
 // base juridique = heures réellement travaillables
 const base = Math.max(
@@ -1650,20 +1649,19 @@ function exportPeriodPDF(){
   pdf.setFontSize(10)
 
   pdf.text(
-    `Période : ${period.start.toLocaleDateString()} → ${
-      period.end.getFullYear() === 2099
-        ? "en cours"
-        : period.end.toLocaleDateString()
-    }`,
-
-  y += 6
+  `Période : ${period.start.toLocaleDateString()} → ${
+    period.end.getFullYear() === 2099
+      ? "en cours"
+      : period.end.toLocaleDateString()
+  }`,
+  10,
+  y
+);
+y += 6;
   pdf.text(`Base hebdomadaire : ${BASE_HEBDO} h`, 10, y)
 
   y += 6
-  pdf.text(
     
-    10, y
-  )
 
   y += 8
   pdf.line(10, y, 200, y)
@@ -1805,6 +1803,7 @@ document.querySelectorAll("details.section").forEach(d => {
 });
 
 initSelectors()
+applyConfigLock();
 buildPeriods()
 autoSwitchPeriodAtMidnight()
 
