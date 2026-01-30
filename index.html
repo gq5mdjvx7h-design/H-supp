@@ -116,17 +116,7 @@ textarea{
 ">
   ⚠️ Action requise : Définissez votre date de début d'exercice dans la Configuration pour activer le calendrier.
 </div>
-  <div class="popup" id="helpConfig">
-  <div class="popup-content">
-    <h3>❓ Réglages</h3>
-    <p>
-    La base représente une semaine normale (ex : 35h).<br><br>
-    Chaque exercice correspond à une année.<br><br>
-    Modifier un réglage recalcule automatiquement les résultats.
-    </p>
-    <button onclick="this.closest('.popup').style.display='none'">Fermer</button>
-  </div>
-</div>
+
 
 <div class="popup" id="helpCalendar">
   <div class="popup-content">
@@ -141,18 +131,6 @@ textarea{
   </div>
 </div>
 
-<div class="popup" id="helpCalc">
-  <div class="popup-content">
-    <h3>❓ Calcul</h3>
-    <p>
-    Chaque semaine est analysée séparément.<br><br>
-    Si tu travailles moins, la semaine attend moins d’heures.<br><br>
-    Les heures sup commencent seulement après 35h travaillées.<br><br>
-    Ce n’est pas un calcul de paie, mais un suivi annuel.
-    </p>
-    <button onclick="this.closest('.popup').style.display='none'">Fermer</button>
-  </div>
-</div>
 <div class="popup" id="popupNotice">
   <div class="popup-content" style="max-width:800px;max-height:80vh;overflow:auto;">
     <h3>📘 Notice utilisateur – Compteur annuel d’heures</h3>
@@ -253,11 +231,6 @@ textarea{
 <details class="section">
  <summary>
   🔧 Configuration
-  <button
-    style="float:right"
-    onclick="document.getElementById('helpConfig').style.display='flex'">
-    ❓
-  </button>
 </summary>
 
   <div class="config">
